@@ -1,8 +1,11 @@
+from django.db import transaction
 from django.db.models import F
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from audit.services import AuditLogService
 
 from .models import (
     MembershipStatus,
@@ -58,13 +61,33 @@ class CurrentWorkspaceView(APIView):
 
     def patch(self, request):
         IsWorkspaceOwner().has_permission(request, self)
+        tracked_fields = ("name", "default_timezone", "low_stock_dashboard_enabled")
+        before = {field: getattr(request.workspace, field) for field in tracked_fields}
         serializer = CurrentWorkspaceSerializer(
             request.workspace,
             data=request.data,
             partial=True,
         )
         serializer.is_valid(raise_exception=True)
-        workspace = serializer.save()
+        with transaction.atomic():
+            workspace = serializer.save()
+            after = {field: getattr(workspace, field) for field in tracked_fields}
+            changed_fields = [
+                field for field in tracked_fields if before[field] != after[field]
+            ]
+            if changed_fields:
+                AuditLogService.record(
+                    workspace=workspace,
+                    actor=request.user,
+                    action="workspace.updated",
+                    resource_type="workspace",
+                    resource_id=workspace.id,
+                    message="Workspace settings updated.",
+                    metadata={
+                        "before": {field: before[field] for field in changed_fields},
+                        "after": {field: after[field] for field in changed_fields},
+                    },
+                )
         workspace.current_user_role = request.workspace_membership.role
         return Response(CurrentWorkspaceSerializer(workspace).data)
 

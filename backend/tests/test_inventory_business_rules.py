@@ -305,11 +305,10 @@ def test_every_stock_change_creates_stock_movement_and_audit_log(django_user_mod
     assert AuditLog.objects.count() == 5
     actions = set(AuditLog.objects.values_list("action", flat=True))
     assert actions == {
-        StockMovementType.STOCK_IN,
-        StockMovementType.STOCK_OUT,
-        StockMovementType.ADJUSTMENT,
-        StockMovementType.TRANSFER_OUT,
-        StockMovementType.TRANSFER_IN,
+        "stock.stock_in",
+        "stock.stock_out",
+        "stock.adjusted",
+        "stock.transferred",
     }
     transfer_batch_ids = set(
         StockMovement.objects.filter(

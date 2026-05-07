@@ -13,6 +13,13 @@ from .models import StockLevel, StockMovement, StockMovementType
 
 QUANTITY_STEP = Decimal("0.001")
 ZERO_QUANTITY = Decimal("0.000")
+STOCK_AUDIT_ACTIONS = {
+    StockMovementType.STOCK_IN: "stock.stock_in",
+    StockMovementType.STOCK_OUT: "stock.stock_out",
+    StockMovementType.ADJUSTMENT: "stock.adjusted",
+    StockMovementType.TRANSFER_IN: "stock.transferred",
+    StockMovementType.TRANSFER_OUT: "stock.transferred",
+}
 
 
 @dataclass(frozen=True)
@@ -181,10 +188,10 @@ class InventoryService:
         AuditLogService.record(
             workspace=movement.workspace,
             actor=movement.performed_by,
-            action=movement.movement_type,
+            action=STOCK_AUDIT_ACTIONS[movement.movement_type],
             resource_type="stock_movement",
             resource_id=movement.id,
-            message=f"{movement.movement_type} movement recorded.",
+            message=f"{STOCK_AUDIT_ACTIONS[movement.movement_type]} recorded.",
             metadata={
                 "movement_id": str(movement.id),
                 "product_id": str(movement.product_id),

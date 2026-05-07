@@ -1,6 +1,7 @@
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from audit.services import AuditLogService
 from common.exceptions import (
     InvalidInvite,
     InviteExpired,
@@ -41,6 +42,18 @@ class WorkspaceService:
             from catalog.services import CatalogSeedService
 
             CatalogSeedService.seed_default_units(workspace)
+            AuditLogService.record(
+                workspace=workspace,
+                actor=owner_user,
+                action="workspace.created",
+                resource_type="workspace",
+                resource_id=workspace.id,
+                message="Workspace created.",
+                metadata={
+                    "name": workspace.name,
+                    "subdomain": workspace.subdomain,
+                },
+            )
         except IntegrityError as exc:
             raise ValidationError(
                 "Workspace subdomain is already in use.",
@@ -94,6 +107,8 @@ class WorkspaceMembershipService:
             workspace=actor_membership.workspace,
         )
         cls._ensure_actor_can_change_member(actor_membership, target_membership)
+        previous_role = target_membership.role
+        previous_status = target_membership.status
 
         new_role = changes.get("role", target_membership.role)
         new_status = changes.get("status", target_membership.status)
@@ -106,6 +121,38 @@ class WorkspaceMembershipService:
         for field, value in changes.items():
             setattr(target_membership, field, value)
         target_membership.save(update_fields=[*changes.keys(), "updated_at"])
+
+        if previous_role != target_membership.role:
+            AuditLogService.record(
+                workspace=target_membership.workspace,
+                actor=actor_membership.user,
+                action="member.role_changed",
+                resource_type="workspace_membership",
+                resource_id=target_membership.id,
+                message="Workspace member role changed.",
+                metadata={
+                    "user_id": str(target_membership.user_id),
+                    "before": {"role": previous_role},
+                    "after": {"role": target_membership.role},
+                },
+            )
+        if (
+            previous_status != MembershipStatus.DISABLED
+            and target_membership.status == MembershipStatus.DISABLED
+        ):
+            AuditLogService.record(
+                workspace=target_membership.workspace,
+                actor=actor_membership.user,
+                action="member.disabled",
+                resource_type="workspace_membership",
+                resource_id=target_membership.id,
+                message="Workspace member disabled.",
+                metadata={
+                    "user_id": str(target_membership.user_id),
+                    "before": {"status": previous_status},
+                    "after": {"status": target_membership.status},
+                },
+            )
         return target_membership
 
     @classmethod
@@ -119,13 +166,24 @@ class WorkspaceMembershipService:
 
 class WorkspaceInviteService:
     @staticmethod
+    @transaction.atomic
     def create_invite(workspace, invited_by, email, role):
-        return WorkspaceInvite.objects.create(
+        invite = WorkspaceInvite.objects.create(
             workspace=workspace,
             invited_by=invited_by,
             email=email,
             role=role,
         )
+        AuditLogService.record(
+            workspace=workspace,
+            actor=invited_by,
+            action="member.invited",
+            resource_type="workspace_invite",
+            resource_id=invite.id,
+            message="Workspace member invited.",
+            metadata={"email": email, "role": role},
+        )
+        return invite
 
     @staticmethod
     def accept_invite(workspace, token, user):
@@ -178,6 +236,19 @@ class WorkspaceInviteService:
                         "updated_at",
                     ]
                 )
+                AuditLogService.record(
+                    workspace=workspace,
+                    actor=user,
+                    action="member.invite_accepted",
+                    resource_type="workspace_membership",
+                    resource_id=membership.id,
+                    message="Workspace invite accepted.",
+                    metadata={
+                        "invite_id": str(invite.id),
+                        "email": invite.email,
+                        "role": membership.role,
+                    },
+                )
 
         if expired:
             raise InviteExpired()
@@ -185,9 +256,19 @@ class WorkspaceInviteService:
         return membership
 
     @staticmethod
+    @transaction.atomic
     def cancel_invite(invite):
         if invite.status != InviteStatus.PENDING:
             raise InvalidInvite("Only pending invites can be cancelled.")
         invite.status = InviteStatus.CANCELLED
         invite.save(update_fields=["status", "updated_at"])
+        AuditLogService.record(
+            workspace=invite.workspace,
+            actor=invite.invited_by,
+            action="member.invite_cancelled",
+            resource_type="workspace_invite",
+            resource_id=invite.id,
+            message="Workspace invite cancelled.",
+            metadata={"email": invite.email, "role": invite.role},
+        )
         return invite

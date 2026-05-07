@@ -1,7 +1,9 @@
+from django.db import transaction
 from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from audit.services import AuditLogService
 from common.mixins import TenantScopedQuerysetMixin
 from workspaces.models import WorkspaceRole
 from workspaces.permissions import HasWorkspace, IsWorkspaceMember
@@ -33,6 +35,27 @@ class ActiveListMixin:
         return queryset.filter(status=WarehouseStatus.ACTIVE)
 
 
+def audit_setup_change(request, action, resource_type, resource, message, metadata=None):
+    AuditLogService.record(
+        workspace=request.workspace,
+        actor=request.user,
+        action=action,
+        resource_type=resource_type,
+        resource_id=resource.id,
+        message=message,
+        metadata=metadata or {},
+    )
+
+
+def changed_field_metadata(instance, validated_data):
+    before = {}
+    after = {}
+    for field in validated_data:
+        before[field] = getattr(instance, field)
+        after[field] = validated_data[field]
+    return {"before": before, "after": after}
+
+
 class WarehouseViewSet(ActiveListMixin, TenantScopedQuerysetMixin, viewsets.ModelViewSet):
     serializer_class = WarehouseSerializer
     permission_classes = [
@@ -52,18 +75,69 @@ class WarehouseViewSet(ActiveListMixin, TenantScopedQuerysetMixin, viewsets.Mode
         queryset = super().get_queryset()
         return self.filter_active_for_list(queryset)
 
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            warehouse = serializer.save(workspace=self.request.workspace)
+            audit_setup_change(
+                self.request,
+                "warehouse.created",
+                "warehouse",
+                warehouse,
+                "Warehouse created.",
+                metadata={"code": warehouse.code, "name": warehouse.name},
+            )
+
+    def perform_update(self, serializer):
+        metadata = changed_field_metadata(serializer.instance, serializer.validated_data)
+        with transaction.atomic():
+            warehouse = serializer.save()
+            audit_setup_change(
+                self.request,
+                "warehouse.updated",
+                "warehouse",
+                warehouse,
+                "Warehouse updated.",
+                metadata=metadata,
+            )
+
     @action(detail=True, methods=["post"])
     def deactivate(self, request, pk=None):
-        warehouse = self.get_object()
-        warehouse.status = WarehouseStatus.INACTIVE
-        warehouse.save(update_fields=["status", "updated_at"])
+        with transaction.atomic():
+            warehouse = self.get_object()
+            previous_status = warehouse.status
+            warehouse.status = WarehouseStatus.INACTIVE
+            warehouse.save(update_fields=["status", "updated_at"])
+            audit_setup_change(
+                request,
+                "warehouse.deactivated",
+                "warehouse",
+                warehouse,
+                "Warehouse deactivated.",
+                metadata={
+                    "before": {"status": previous_status},
+                    "after": {"status": warehouse.status},
+                },
+            )
         return Response(self.get_serializer(warehouse).data)
 
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
-        warehouse = self.get_object()
-        warehouse.status = WarehouseStatus.ACTIVE
-        warehouse.save(update_fields=["status", "updated_at"])
+        with transaction.atomic():
+            warehouse = self.get_object()
+            previous_status = warehouse.status
+            warehouse.status = WarehouseStatus.ACTIVE
+            warehouse.save(update_fields=["status", "updated_at"])
+            audit_setup_change(
+                request,
+                "warehouse.activated",
+                "warehouse",
+                warehouse,
+                "Warehouse activated.",
+                metadata={
+                    "before": {"status": previous_status},
+                    "after": {"status": warehouse.status},
+                },
+            )
         return Response(self.get_serializer(warehouse).data)
 
 
@@ -96,16 +170,71 @@ class WarehouseLocationViewSet(
             queryset = queryset.filter(location_type=location_type)
         return self.filter_active_for_list(queryset)
 
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            location = serializer.save(workspace=self.request.workspace)
+            audit_setup_change(
+                self.request,
+                "location.created",
+                "warehouse_location",
+                location,
+                "Warehouse location created.",
+                metadata={
+                    "code": location.code,
+                    "name": location.name,
+                    "warehouse_id": str(location.warehouse_id),
+                },
+            )
+
+    def perform_update(self, serializer):
+        metadata = changed_field_metadata(serializer.instance, serializer.validated_data)
+        with transaction.atomic():
+            location = serializer.save()
+            audit_setup_change(
+                self.request,
+                "location.updated",
+                "warehouse_location",
+                location,
+                "Warehouse location updated.",
+                metadata=metadata,
+            )
+
     @action(detail=True, methods=["post"])
     def deactivate(self, request, pk=None):
-        location = self.get_object()
-        location.status = WarehouseStatus.INACTIVE
-        location.save(update_fields=["status", "updated_at"])
+        with transaction.atomic():
+            location = self.get_object()
+            previous_status = location.status
+            location.status = WarehouseStatus.INACTIVE
+            location.save(update_fields=["status", "updated_at"])
+            audit_setup_change(
+                request,
+                "location.deactivated",
+                "warehouse_location",
+                location,
+                "Warehouse location deactivated.",
+                metadata={
+                    "before": {"status": previous_status},
+                    "after": {"status": location.status},
+                },
+            )
         return Response(self.get_serializer(location).data)
 
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
-        location = self.get_object()
-        location.status = WarehouseStatus.ACTIVE
-        location.save(update_fields=["status", "updated_at"])
+        with transaction.atomic():
+            location = self.get_object()
+            previous_status = location.status
+            location.status = WarehouseStatus.ACTIVE
+            location.save(update_fields=["status", "updated_at"])
+            audit_setup_change(
+                request,
+                "location.activated",
+                "warehouse_location",
+                location,
+                "Warehouse location activated.",
+                metadata={
+                    "before": {"status": previous_status},
+                    "after": {"status": location.status},
+                },
+            )
         return Response(self.get_serializer(location).data)

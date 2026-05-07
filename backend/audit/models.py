@@ -35,6 +35,7 @@ class AuditLog(models.Model):
             models.Index(fields=["workspace", "created_at"]),
             models.Index(fields=["workspace", "action"]),
             models.Index(fields=["resource_type", "resource_id"]),
+            models.Index(fields=["actor", "created_at"]),
         ]
 
     def __str__(self):
