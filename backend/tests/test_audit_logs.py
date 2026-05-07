@@ -25,6 +25,10 @@ def api_client(user=None):
     return client
 
 
+def list_results(response):
+    return response.data["results"]
+
+
 def create_user(django_user_model, email):
     return django_user_model.objects.create_user(
         email=email,
@@ -182,7 +186,9 @@ def test_audit_log_api_is_tenant_scoped(django_user_model):
     )
 
     assert response.status_code == 200
-    assert [item["resource_id"] for item in response.data] == ["acme-resource"]
+    assert [item["resource_id"] for item in list_results(response)] == [
+        "acme-resource"
+    ]
 
 
 def test_staff_and_viewer_cannot_access_audit_logs(django_user_model):

@@ -1,4 +1,4 @@
-from rest_framework import filters, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
@@ -11,6 +11,7 @@ from workspaces.permissions import (
     IsWorkspaceMember,
 )
 
+from .filters import StockLevelFilter, StockMovementFilter
 from .models import StockLevel, StockMovement
 from .serializers import (
     AdjustStockSerializer,
@@ -36,7 +37,7 @@ class StockLevelViewSet(TenantScopedQuerysetMixin, viewsets.ReadOnlyModelViewSet
         "warehouse",
         "location",
     )
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = StockLevelFilter
     search_fields = [
         "product__sku",
         "product__name",
@@ -54,19 +55,6 @@ class StockLevelViewSet(TenantScopedQuerysetMixin, viewsets.ReadOnlyModelViewSet
     ]
     ordering = ["product__sku", "warehouse__code", "location__code"]
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        product_id = self.request.query_params.get("product")
-        warehouse_id = self.request.query_params.get("warehouse")
-        location_id = self.request.query_params.get("location")
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
-        if warehouse_id:
-            queryset = queryset.filter(warehouse_id=warehouse_id)
-        if location_id:
-            queryset = queryset.filter(location_id=location_id)
-        return queryset
-
 
 class StockMovementViewSet(TenantScopedQuerysetMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = StockMovementSerializer
@@ -83,7 +71,7 @@ class StockMovementViewSet(TenantScopedQuerysetMixin, viewsets.ReadOnlyModelView
         "destination_location",
         "performed_by",
     )
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = StockMovementFilter
     search_fields = [
         "product__sku",
         "product__name",
@@ -93,21 +81,6 @@ class StockMovementViewSet(TenantScopedQuerysetMixin, viewsets.ReadOnlyModelView
     ]
     ordering_fields = ["created_at", "movement_type", "quantity", "product__sku"]
     ordering = ["-created_at"]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        product_id = self.request.query_params.get("product")
-        movement_type = self.request.query_params.get("movement_type")
-        warehouse_id = self.request.query_params.get("warehouse")
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
-        if movement_type:
-            queryset = queryset.filter(movement_type=movement_type)
-        if warehouse_id:
-            queryset = queryset.filter(
-                source_warehouse_id=warehouse_id
-            ) | queryset.filter(destination_warehouse_id=warehouse_id)
-        return queryset
 
 
 class InventoryActionView(GenericAPIView):

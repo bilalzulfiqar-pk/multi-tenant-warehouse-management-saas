@@ -1,5 +1,5 @@
 from django.db import transaction
-from rest_framework import filters, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -8,6 +8,7 @@ from common.mixins import TenantScopedQuerysetMixin
 from workspaces.models import WorkspaceRole
 from workspaces.permissions import HasWorkspace, IsWorkspaceMember
 
+from .filters import WarehouseFilter, WarehouseLocationFilter
 from .models import Warehouse, WarehouseLocation, WarehouseStatus
 from .permissions import CanReadOrManageWarehouseSetup
 from .serializers import WarehouseLocationSerializer, WarehouseSerializer
@@ -66,7 +67,7 @@ class WarehouseViewSet(ActiveListMixin, TenantScopedQuerysetMixin, viewsets.Mode
     ]
     queryset = Warehouse.objects.all()
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = WarehouseFilter
     search_fields = ["name", "code", "city", "country"]
     ordering_fields = ["name", "code", "city", "country", "status", "created_at"]
     ordering = ["name"]
@@ -155,19 +156,13 @@ class WarehouseLocationViewSet(
     ]
     queryset = WarehouseLocation.objects.select_related("warehouse")
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = WarehouseLocationFilter
     search_fields = ["name", "code", "warehouse__name", "warehouse__code"]
     ordering_fields = ["name", "code", "location_type", "status", "created_at"]
     ordering = ["warehouse__name", "code"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        warehouse_id = self.request.query_params.get("warehouse")
-        location_type = self.request.query_params.get("location_type")
-        if warehouse_id:
-            queryset = queryset.filter(warehouse_id=warehouse_id)
-        if location_type:
-            queryset = queryset.filter(location_type=location_type)
         return self.filter_active_for_list(queryset)
 
     def perform_create(self, serializer):

@@ -22,6 +22,10 @@ def api_client(user=None):
     return client
 
 
+def list_results(response):
+    return response.data["results"]
+
+
 def create_user(django_user_model, email):
     return django_user_model.objects.create_user(
         email=email,
@@ -121,7 +125,7 @@ def test_products_are_tenant_scoped(django_user_model):
     )
 
     assert response.status_code == 200
-    assert [item["sku"] for item in response.data] == ["ACME-001"]
+    assert [item["sku"] for item in list_results(response)] == ["ACME-001"]
 
 
 def test_sku_is_unique_inside_one_workspace_and_reusable_across_workspaces(
@@ -341,9 +345,13 @@ def test_inactive_products_are_excluded_from_default_active_lists(django_user_mo
 
     assert deactivate_response.status_code == 200
     assert deactivate_response.data["is_active"] is False
-    assert [item["id"] for item in default_response.data] == [str(active_product.id)]
-    assert [item["id"] for item in inactive_response.data] == [str(inactive_product.id)]
-    assert staff_inactive_response.data == []
+    assert [item["id"] for item in list_results(default_response)] == [
+        str(active_product.id)
+    ]
+    assert [item["id"] for item in list_results(inactive_response)] == [
+        str(inactive_product.id)
+    ]
+    assert list_results(staff_inactive_response) == []
 
 
 def test_category_and_unit_lifecycle_actions(django_user_model):

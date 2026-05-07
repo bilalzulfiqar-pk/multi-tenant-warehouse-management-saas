@@ -1,5 +1,5 @@
 from django.db import transaction
-from rest_framework import filters, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -8,6 +8,7 @@ from common.mixins import TenantScopedQuerysetMixin
 from workspaces.models import WorkspaceRole
 from workspaces.permissions import HasWorkspace, IsWorkspaceMember
 
+from .filters import ProductCategoryFilter, ProductFilter, UnitOfMeasureFilter
 from .models import Product, ProductCategory, UnitOfMeasure
 from .permissions import CanReadOrManageCatalogSetup
 from .serializers import (
@@ -74,7 +75,7 @@ class ProductCategoryViewSet(
     ]
     queryset = ProductCategory.objects.all()
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = ProductCategoryFilter
     search_fields = ["name", "description"]
     ordering_fields = ["name", "is_active", "created_at"]
     ordering = ["name"]
@@ -163,7 +164,7 @@ class UnitOfMeasureViewSet(
     ]
     queryset = UnitOfMeasure.objects.all()
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = UnitOfMeasureFilter
     search_fields = ["name", "abbreviation"]
     ordering_fields = ["name", "abbreviation", "is_active", "created_at"]
     ordering = ["name"]
@@ -252,7 +253,7 @@ class ProductViewSet(
     ]
     queryset = Product.objects.select_related("category", "unit")
     http_method_names = ["get", "post", "patch", "head", "options"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = ProductFilter
     search_fields = [
         "name",
         "sku",
@@ -273,12 +274,6 @@ class ProductViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        category_id = self.request.query_params.get("category")
-        unit_id = self.request.query_params.get("unit")
-        if category_id:
-            queryset = queryset.filter(category_id=category_id)
-        if unit_id:
-            queryset = queryset.filter(unit_id=unit_id)
         return self.filter_active_for_list(queryset)
 
     def perform_create(self, serializer):

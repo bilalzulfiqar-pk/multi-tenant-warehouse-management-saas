@@ -22,6 +22,10 @@ def api_client(user=None):
     return client
 
 
+def list_results(response):
+    return response.data["results"]
+
+
 def create_user(django_user_model, email):
     return django_user_model.objects.create_user(
         email=email,
@@ -96,7 +100,7 @@ def test_warehouses_are_tenant_scoped(django_user_model):
     )
 
     assert response.status_code == 200
-    assert [item["code"] for item in response.data] == ["ACME"]
+    assert [item["code"] for item in list_results(response)] == ["ACME"]
 
 
 def test_warehouse_code_is_unique_per_workspace(django_user_model):
@@ -321,9 +325,13 @@ def test_deactivated_locations_do_not_appear_in_default_active_lists(django_user
 
     assert deactivate_response.status_code == 200
     assert deactivate_response.data["status"] == WarehouseStatus.INACTIVE
-    assert [item["id"] for item in default_response.data] == [str(active_location.id)]
-    assert [item["id"] for item in inactive_response.data] == [str(inactive_location.id)]
-    assert staff_inactive_response.data == []
+    assert [item["id"] for item in list_results(default_response)] == [
+        str(active_location.id)
+    ]
+    assert [item["id"] for item in list_results(inactive_response)] == [
+        str(inactive_location.id)
+    ]
+    assert list_results(staff_inactive_response) == []
 
 
 def test_warehouse_activate_and_deactivate_actions(django_user_model):

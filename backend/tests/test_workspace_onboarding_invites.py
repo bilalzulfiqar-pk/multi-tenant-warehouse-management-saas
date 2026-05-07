@@ -25,6 +25,10 @@ def api_client(user=None):
     return client
 
 
+def list_results(response):
+    return response.data["results"]
+
+
 def create_user(django_user_model, email="user@example.com"):
     return django_user_model.objects.create_user(
         email=email,
@@ -117,9 +121,9 @@ def test_workspace_list_returns_current_users_active_workspaces(django_user_mode
     response = api_client(user).get("/api/workspaces/", HTTP_HOST="localhost:8000")
 
     assert response.status_code == 200
-    subdomains = {item["subdomain"] for item in response.data}
+    subdomains = {item["subdomain"] for item in list_results(response)}
     assert subdomains == {"acme", "beta"}
-    roles = {item["subdomain"]: item["role"] for item in response.data}
+    roles = {item["subdomain"]: item["role"] for item in list_results(response)}
     assert roles[acme.subdomain] == WorkspaceRole.OWNER
     assert roles[beta.subdomain] == WorkspaceRole.MANAGER
 
@@ -178,7 +182,7 @@ def test_owner_can_list_update_and_disable_members(django_user_model):
     )
 
     assert list_response.status_code == 200
-    assert len(list_response.data) == 2
+    assert len(list_results(list_response)) == 2
 
     update_response = api_client(owner).patch(
         f"/api/members/{staff_membership.id}/",
