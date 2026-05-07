@@ -38,6 +38,9 @@ class WorkspaceService:
                 status=MembershipStatus.ACTIVE,
                 joined_at=timezone.now(),
             )
+            from catalog.services import CatalogSeedService
+
+            CatalogSeedService.seed_default_units(workspace)
         except IntegrityError as exc:
             raise ValidationError(
                 "Workspace subdomain is already in use.",
