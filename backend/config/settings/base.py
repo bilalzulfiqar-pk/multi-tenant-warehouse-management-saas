@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "workspaces",
     "warehouse",
     "catalog",
+    "inventory",
 ]
 
 MIDDLEWARE = [
