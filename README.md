@@ -66,6 +66,27 @@ With the backend service running:
 - `GET /api/auth/me/`
 - `PATCH /api/auth/me/`
 
+## Local Subdomain Setup
+
+Tenant context is resolved from the request subdomain. Local tenant URLs should use hosts like:
+
+- `http://acme.localhost:8000/`
+- `http://tenant1.localhost:8000/`
+- `http://tenant2.localhost:8000/`
+
+If your browser or OS does not resolve those automatically, add entries like these to your hosts file:
+
+```text
+127.0.0.1 acme.localhost
+127.0.0.1 tenant1.localhost
+127.0.0.1 tenant2.localhost
+```
+
+Alternative local wildcard-style domains can also be useful:
+
+- `http://acme.lvh.me:8000/`
+- `http://acme.localtest.me:8000/`
+
 ## MVP Boundaries
 
 This project intentionally excludes Stripe, billing, AI, frontend work, receiving/dispatch workflows, email notifications, PDF reports, and CSV import/export from the MVP.

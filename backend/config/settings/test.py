@@ -2,7 +2,14 @@ from .base import *
 
 SECRET_KEY = "test-secret-key-for-jwt-signing-at-least-32-bytes"
 DEBUG = False
-ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "testserver",
+    "localhost",
+    "127.0.0.1",
+    ".localhost",
+    ".lvh.me",
+    ".localtest.me",
+]
 
 test_database_url = env(
     "TEST_DATABASE_URL",
