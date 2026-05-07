@@ -1,10 +1,12 @@
 import uuid
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
 
+from audit.services import AuditLogService
 from common.exceptions import ValidationError as BusinessValidationError
+from warehouse.models import WarehouseStatus
 
 from .models import StockLevel, StockMovement, StockMovementType
 
@@ -21,14 +23,22 @@ class InventoryOperationResult:
 
 class InventoryService:
     @staticmethod
-    def _normalize_quantity(value):
-        if not isinstance(value, Decimal):
-            value = Decimal(str(value))
-        return value.quantize(QUANTITY_STEP)
+    def _normalize_quantity(value, field_name="quantity"):
+        try:
+            if not isinstance(value, Decimal):
+                value = Decimal(str(value))
+            if not value.is_finite():
+                raise InvalidOperation
+            return value.quantize(QUANTITY_STEP)
+        except (InvalidOperation, ValueError) as exc:
+            raise BusinessValidationError(
+                f"{field_name.replace('_', ' ').title()} must be a valid decimal.",
+                details={field_name: str(value)},
+            ) from exc
 
     @classmethod
     def _positive_quantity(cls, value, field_name="quantity"):
-        quantity = cls._normalize_quantity(value)
+        quantity = cls._normalize_quantity(value, field_name=field_name)
         if quantity <= ZERO_QUANTITY:
             raise BusinessValidationError(
                 f"{field_name.replace('_', ' ').title()} must be greater than zero.",
@@ -38,7 +48,7 @@ class InventoryService:
 
     @classmethod
     def _non_negative_quantity(cls, value, field_name="quantity"):
-        quantity = cls._normalize_quantity(value)
+        quantity = cls._normalize_quantity(value, field_name=field_name)
         if quantity < ZERO_QUANTITY:
             raise BusinessValidationError(
                 f"{field_name.replace('_', ' ').title()} cannot be negative.",
@@ -69,6 +79,39 @@ class InventoryService:
     def _ensure_inventory_context(cls, workspace, product, warehouse, location):
         cls._ensure_workspace_match(workspace, product, warehouse, location)
         cls._ensure_location_matches_warehouse(warehouse, location)
+        cls._ensure_active_product(product)
+        cls._ensure_active_warehouse(warehouse)
+        cls._ensure_active_location(location)
+
+    @staticmethod
+    def _ensure_active_product(product):
+        if not product.is_active:
+            raise BusinessValidationError("Inactive product cannot be used.")
+
+    @staticmethod
+    def _ensure_active_warehouse(warehouse):
+        if warehouse.status != WarehouseStatus.ACTIVE:
+            raise BusinessValidationError("Inactive warehouse cannot be used.")
+
+    @staticmethod
+    def _ensure_active_location(location):
+        if location.status != WarehouseStatus.ACTIVE:
+            raise BusinessValidationError("Inactive location cannot be used.")
+
+    @classmethod
+    def _ensure_active_transfer_context(
+        cls,
+        product,
+        source_warehouse,
+        source_location,
+        destination_warehouse,
+        destination_location,
+    ):
+        cls._ensure_active_product(product)
+        cls._ensure_active_warehouse(source_warehouse)
+        cls._ensure_active_location(source_location)
+        cls._ensure_active_warehouse(destination_warehouse)
+        cls._ensure_active_location(destination_location)
 
     @staticmethod
     def _locked_stock_level(workspace, product, warehouse, location):
@@ -93,8 +136,9 @@ class InventoryService:
         except StockLevel.DoesNotExist as exc:
             raise BusinessValidationError("Insufficient stock for this operation.") from exc
 
-    @staticmethod
+    @classmethod
     def _create_movement(
+        cls,
         *,
         workspace,
         product,
@@ -112,7 +156,7 @@ class InventoryService:
         notes="",
         metadata=None,
     ):
-        return StockMovement.objects.create(
+        movement = StockMovement.objects.create(
             workspace=workspace,
             product=product,
             movement_type=movement_type,
@@ -128,6 +172,50 @@ class InventoryService:
             notes=notes or "",
             metadata=metadata or {},
             performed_by=actor,
+        )
+        cls._record_stock_audit(movement)
+        return movement
+
+    @staticmethod
+    def _record_stock_audit(movement):
+        AuditLogService.record(
+            workspace=movement.workspace,
+            actor=movement.performed_by,
+            action=movement.movement_type,
+            resource_type="stock_movement",
+            resource_id=movement.id,
+            message=f"{movement.movement_type} movement recorded.",
+            metadata={
+                "movement_id": str(movement.id),
+                "product_id": str(movement.product_id),
+                "quantity": format(movement.quantity, "f"),
+                "source_warehouse_id": (
+                    str(movement.source_warehouse_id)
+                    if movement.source_warehouse_id
+                    else ""
+                ),
+                "source_location_id": (
+                    str(movement.source_location_id)
+                    if movement.source_location_id
+                    else ""
+                ),
+                "destination_warehouse_id": (
+                    str(movement.destination_warehouse_id)
+                    if movement.destination_warehouse_id
+                    else ""
+                ),
+                "destination_location_id": (
+                    str(movement.destination_location_id)
+                    if movement.destination_location_id
+                    else ""
+                ),
+                "transfer_batch_id": (
+                    str(movement.transfer_batch_id)
+                    if movement.transfer_batch_id
+                    else ""
+                ),
+                "movement_metadata": movement.metadata,
+            },
         )
 
     @classmethod
@@ -303,6 +391,13 @@ class InventoryService:
             destination_warehouse,
             destination_location,
             label="destination_location",
+        )
+        cls._ensure_active_transfer_context(
+            product,
+            source_warehouse,
+            source_location,
+            destination_warehouse,
+            destination_location,
         )
 
         if (

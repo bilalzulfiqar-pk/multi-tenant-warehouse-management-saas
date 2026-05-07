@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "warehouse",
     "catalog",
     "inventory",
+    "audit",
 ]
 
 MIDDLEWARE = [
