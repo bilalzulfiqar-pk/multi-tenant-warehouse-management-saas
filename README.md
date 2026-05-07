@@ -58,6 +58,14 @@ With the backend service running:
 - OpenAPI schema: `http://localhost:8000/api/schema/`
 - ReDoc: `http://localhost:8000/api/redoc/`
 
+## Accounts API
+
+- `POST /api/auth/register/`
+- `POST /api/auth/login/`
+- `POST /api/auth/token/refresh/`
+- `GET /api/auth/me/`
+- `PATCH /api/auth/me/`
+
 ## MVP Boundaries
 
 This project intentionally excludes Stripe, billing, AI, frontend work, receiving/dispatch workflows, email notifications, PDF reports, and CSV import/export from the MVP.
