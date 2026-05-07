@@ -80,6 +80,10 @@ class CanManageMembers(HasWorkspaceRole):
     allowed_roles = (WorkspaceRole.OWNER, WorkspaceRole.ADMIN)
 
 
+class IsWorkspaceOwner(HasWorkspaceRole):
+    allowed_roles = (WorkspaceRole.OWNER,)
+
+
 class CanManageInventory(HasWorkspaceRole):
     allowed_roles = (WorkspaceRole.OWNER, WorkspaceRole.ADMIN, WorkspaceRole.MANAGER)
 

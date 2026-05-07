@@ -66,6 +66,25 @@ With the backend service running:
 - `GET /api/auth/me/`
 - `PATCH /api/auth/me/`
 
+## Workspace API
+
+Root-domain workspace endpoints:
+
+- `POST /api/workspaces/create/`
+- `GET /api/workspaces/`
+
+Tenant-subdomain workspace endpoints:
+
+- `GET /api/workspace/`
+- `PATCH /api/workspace/`
+- `GET /api/members/`
+- `PATCH /api/members/{id}/`
+- `POST /api/members/{id}/disable/`
+- `GET /api/invites/`
+- `POST /api/invites/`
+- `POST /api/invites/{id}/cancel/`
+- `POST /api/invites/accept/`
+
 ## Local Subdomain Setup
 
 Tenant context is resolved from the request subdomain. Local tenant URLs should use hosts like:

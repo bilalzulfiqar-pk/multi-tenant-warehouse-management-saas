@@ -52,6 +52,8 @@ class Workspace(models.Model):
         choices=WorkspaceStatus.choices,
         default=WorkspaceStatus.ACTIVE,
     )
+    default_timezone = models.CharField(max_length=64, default="UTC")
+    low_stock_dashboard_enabled = models.BooleanField(default=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

@@ -35,3 +35,21 @@ class WorkspacePermissionDenied(BusinessAPIException):
     status_code = 403
     error_code = "permission_denied"
     message = "You do not have permission to perform this action."
+
+
+class ValidationError(BusinessAPIException):
+    status_code = 400
+    error_code = "validation_error"
+    message = "The request is invalid."
+
+
+class InvalidInvite(BusinessAPIException):
+    status_code = 400
+    error_code = "invalid_invite"
+    message = "The invite is invalid."
+
+
+class InviteExpired(BusinessAPIException):
+    status_code = 400
+    error_code = "invite_expired"
+    message = "The invite has expired."
