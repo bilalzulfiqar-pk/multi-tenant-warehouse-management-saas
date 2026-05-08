@@ -11,7 +11,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.local
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-local-development-secret-key}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,.localhost,.lvh.me,.localtest.me}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,.localhost,.lvh.me,.localtest.me}
       DATABASE_URL: ${DATABASE_URL:-postgres://warehouse_user:warehouse_password@postgres:5432/warehouse_saas}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
@@ -32,7 +32,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.local
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-local-development-secret-key}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,.localhost,.lvh.me,.localtest.me}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,.localhost,.lvh.me,.localtest.me}
       DATABASE_URL: ${DATABASE_URL:-postgres://warehouse_user:warehouse_password@postgres:5432/warehouse_saas}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
