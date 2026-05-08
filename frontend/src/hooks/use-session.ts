@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { apiRequest, jsonBody } from "@/lib/api-client";
 import type { Session, Workspace } from "@/lib/types";
@@ -17,9 +18,11 @@ export function useRequireSession() {
   const router = useRouter();
   const query = useSession();
 
-  if (!query.isLoading && query.data && !query.data.user) {
-    router.replace("/login");
-  }
+  useEffect(() => {
+    if (!query.isLoading && query.data && !query.data.user) {
+      router.replace("/login");
+    }
+  }, [query.data, query.isLoading, router]);
 
   return query;
 }
