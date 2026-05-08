@@ -36,7 +36,7 @@ function StatCard({
           <p className="text-sm text-slate-500">{title}</p>
           <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-cyan-50 text-cyan-700">
+        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
           <Icon className="h-5 w-5" />
         </div>
       </CardContent>

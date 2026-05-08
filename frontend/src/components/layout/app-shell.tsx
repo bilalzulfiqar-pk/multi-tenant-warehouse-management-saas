@@ -77,7 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-slate-950 text-white lg:flex">
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-cyan-500 text-slate-950">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500 text-slate-950">
             <Building2 className="h-5 w-5" />
           </div>
           <div>

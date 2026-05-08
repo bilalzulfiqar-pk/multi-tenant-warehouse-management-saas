@@ -95,7 +95,7 @@ export function NativeSelect({
         id={id}
         aria-label={props["aria-label"]}
         className={cn(
-          "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-white px-3 text-left text-sm text-slate-950 shadow-sm outline-none transition hover:border-cyan-300 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 data-[placeholder]:text-slate-500",
+          "flex h-9 w-full items-center justify-between gap-2 rounded-md border bg-white px-3 text-left text-sm text-slate-950 shadow-sm outline-none transition hover:border-emerald-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 data-[placeholder]:text-slate-500",
           className,
         )}
       >
@@ -120,10 +120,10 @@ export function NativeSelect({
                 key={`${option.value}-${optionText(option.label)}`}
                 value={toRadixValue(option.value)}
                 disabled={option.disabled}
-                className="relative flex min-h-9 cursor-default select-none items-center rounded px-8 py-2 text-sm text-slate-700 outline-none transition data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[highlighted]:bg-cyan-50 data-[highlighted]:text-cyan-900"
+                className="relative flex min-h-9 cursor-default select-none items-center rounded px-8 py-2 text-sm text-slate-700 outline-none transition data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[highlighted]:bg-emerald-50 data-[highlighted]:text-emerald-900"
               >
                 <SelectPrimitive.ItemIndicator className="absolute left-2 inline-flex items-center">
-                  <Check className="h-4 w-4 text-cyan-700" />
+                  <Check className="h-4 w-4 text-emerald-700" />
                 </SelectPrimitive.ItemIndicator>
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
               </SelectPrimitive.Item>

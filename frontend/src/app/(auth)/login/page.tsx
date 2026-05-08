@@ -43,7 +43,7 @@ export default function LoginPage() {
       footer={
         <>
           New to the project?{" "}
-          <Link className="font-medium text-cyan-700 hover:text-cyan-800" href="/register">
+          <Link className="font-medium text-emerald-700 hover:text-emerald-800" href="/register">
             Create an account
           </Link>
         </>
