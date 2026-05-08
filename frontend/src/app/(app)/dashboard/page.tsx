@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { MovementBadge, StatusBadge } from "@/components/domain/badges";
 import { EmptyState } from "@/components/layout/empty-state";
+import { StatCardsSkeleton, TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,6 +68,8 @@ export default function DashboardPage() {
     enabled: hasWorkspace,
     queryFn: () => tenantApi<StockMovement[]>("dashboard/recent-movements"),
   });
+  const dashboardLoading =
+    summary.isLoading || lowStock.isLoading || byWarehouse.isLoading || recent.isLoading;
 
   if (!hasWorkspace) {
     return (
@@ -97,28 +100,32 @@ export default function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total Products"
-          value={summary.data?.total_products ?? "-"}
-          icon={Package}
-        />
-        <StatCard
-          title="Warehouses"
-          value={summary.data?.total_warehouses ?? "-"}
-          icon={Building2}
-        />
-        <StatCard
-          title="Low Stock"
-          value={summary.data?.low_stock_products ?? "-"}
-          icon={TriangleAlert}
-        />
-        <StatCard
-          title="Total Stock"
-          value={summary.data ? formatQuantity(summary.data.total_stock_quantity) : "-"}
-          icon={Boxes}
-        />
-      </div>
+      {dashboardLoading ? (
+        <StatCardsSkeleton />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Total Products"
+            value={summary.data?.total_products ?? "-"}
+            icon={Package}
+          />
+          <StatCard
+            title="Warehouses"
+            value={summary.data?.total_warehouses ?? "-"}
+            icon={Building2}
+          />
+          <StatCard
+            title="Low Stock"
+            value={summary.data?.low_stock_products ?? "-"}
+            icon={TriangleAlert}
+          />
+          <StatCard
+            title="Total Stock"
+            value={summary.data ? formatQuantity(summary.data.total_stock_quantity) : "-"}
+            icon={Boxes}
+          />
+        </div>
+      )}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <Card>
@@ -136,7 +143,13 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(byWarehouse.data || []).map((item) => (
+                {byWarehouse.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      <TableSkeleton columns={4} />
+                    </TableCell>
+                  </TableRow>
+                ) : (byWarehouse.data || []).map((item) => (
                   <TableRow key={item.warehouse}>
                     <TableCell>
                       <p className="font-medium text-slate-950">{item.warehouse_name}</p>
@@ -171,7 +184,13 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(lowStock.data || []).map((item) => (
+                {lowStock.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      <TableSkeleton columns={4} />
+                    </TableCell>
+                  </TableRow>
+                ) : (lowStock.data || []).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium text-slate-950">{item.sku}</TableCell>
                     <TableCell>{item.name}</TableCell>
@@ -203,7 +222,13 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(recent.data || []).map((item) => (
+              {recent.isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <TableSkeleton columns={5} />
+                  </TableCell>
+                </TableRow>
+              ) : (recent.data || []).map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <MovementBadge type={item.movement_type} />

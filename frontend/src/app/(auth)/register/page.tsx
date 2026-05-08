@@ -70,8 +70,8 @@ export default function RegisterPage() {
             required
           />
         </div>
-        <Button className="w-full" type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create account"}
+        <Button className="w-full" type="submit" isLoading={loading} loadingText="Creating...">
+          Create account
         </Button>
       </form>
     </AuthCard>

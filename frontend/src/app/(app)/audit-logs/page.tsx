@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,7 +63,13 @@ export default function AuditLogsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(logs.data?.results || []).map((log) => (
+            {logs.isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <TableSkeleton columns={6} />
+                </TableCell>
+              </TableRow>
+            ) : (logs.data?.results || []).map((log) => (
               <TableRow key={log.id}>
                 <TableCell>{formatDateTime(log.created_at)}</TableCell>
                 <TableCell>{log.actor_email || "System"}</TableCell>

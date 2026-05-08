@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,7 +158,13 @@ export default function WarehousesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(warehouses.data?.results || []).map((warehouse) => (
+                {warehouses.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6}>
+                      <TableSkeleton columns={6} />
+                    </TableCell>
+                  </TableRow>
+                ) : (warehouses.data?.results || []).map((warehouse) => (
                   <TableRow key={warehouse.id}>
                     <TableCell className="font-medium text-slate-950">{warehouse.code}</TableCell>
                     <TableCell>{warehouse.name}</TableCell>
@@ -199,7 +206,13 @@ export default function WarehousesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(locations.data?.results || []).map((location) => (
+                {locations.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <TableSkeleton columns={7} />
+                    </TableCell>
+                  </TableRow>
+                ) : (locations.data?.results || []).map((location) => (
                   <TableRow key={location.id}>
                     <TableCell className="font-medium text-slate-950">{location.code}</TableCell>
                     <TableCell>{location.name}</TableCell>

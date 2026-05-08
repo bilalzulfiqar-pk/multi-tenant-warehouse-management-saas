@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { BooleanBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -179,7 +180,13 @@ export default function ProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(products.data?.results || []).map((product) => (
+                {products.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9}>
+                      <TableSkeleton columns={9} />
+                    </TableCell>
+                  </TableRow>
+                ) : (products.data?.results || []).map((product) => (
                   <TableRow key={product.id}>
                     <TableCell className="font-medium text-slate-950">{product.sku}</TableCell>
                     <TableCell>{product.name}</TableCell>
@@ -218,6 +225,7 @@ export default function ProductsPage() {
         <TabsContent value="categories">
           <SimpleTable
             rows={categories.data || []}
+            isLoading={categories.isLoading}
             columns={["Name", "Description", "Status"]}
             render={(category) => [
               category.name,
@@ -246,6 +254,7 @@ export default function ProductsPage() {
         <TabsContent value="units">
           <SimpleTable
             rows={units.data || []}
+            isLoading={units.isLoading}
             columns={["Name", "Abbreviation", "Status"]}
             render={(unit) => [
               unit.name,
@@ -329,11 +338,13 @@ export default function ProductsPage() {
 
 function SimpleTable<T extends { id: string }>({
   rows,
+  isLoading,
   columns,
   render,
   actions,
 }: {
   rows: T[];
+  isLoading?: boolean;
   columns: string[];
   render: (row: T) => React.ReactNode[];
   actions?: (row: T) => React.ReactNode;
@@ -348,7 +359,13 @@ function SimpleTable<T extends { id: string }>({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row) => (
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={columns.length + 1}>
+                <TableSkeleton columns={columns.length + 1} />
+              </TableCell>
+            </TableRow>
+          ) : rows.map((row) => (
             <TableRow key={row.id}>
               {render(row).map((cell, index) => <TableCell key={index}>{cell}</TableCell>)}
               <TableCell className="text-right">

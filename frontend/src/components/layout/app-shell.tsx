@@ -179,7 +179,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
         </header>
-        <main className="px-4 py-5 lg:px-6">{children}</main>
+        <main className="px-4 py-5 lg:px-6">
+          <div key={pathname} className="motion-page">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

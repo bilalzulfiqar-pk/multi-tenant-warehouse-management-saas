@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Field } from "@/components/domain/field";
@@ -19,9 +20,11 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const workspace = session?.workspace;
   const canEdit = canEditWorkspaceSettings(workspace?.role);
+  const [saving, setSaving] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSaving(true);
     const form = new FormData(event.currentTarget);
     try {
       await tenantApi("workspace", {
@@ -37,6 +40,8 @@ export default function SettingsPage() {
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save settings");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -84,7 +89,9 @@ export default function SettingsPage() {
                 <option value="false">Disabled</option>
               </NativeSelect>
             </Field>
-            <Button type="submit" disabled={!canEdit}>Save settings</Button>
+            <Button type="submit" disabled={!canEdit} isLoading={saving} loadingText="Saving...">
+              Save settings
+            </Button>
           </form>
         </CardContent>
       </Card>

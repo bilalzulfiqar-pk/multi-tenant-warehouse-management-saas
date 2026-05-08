@@ -130,9 +130,9 @@ export default function WorkspacesPage() {
                   Preview: {subdomain ? compactUrlHost(subdomain) : "acme.localhost:8000"}
                 </p>
               </div>
-              <Button className="w-full" disabled={loading} type="submit">
+              <Button className="w-full" isLoading={loading} loadingText="Creating..." type="submit">
                 <Plus className="h-4 w-4" />
-                {loading ? "Creating..." : "Create workspace"}
+                Create workspace
               </Button>
             </form>
           </CardContent>

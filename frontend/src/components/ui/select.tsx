@@ -112,7 +112,7 @@ export function NativeSelect({
         <SelectPrimitive.Content
           position="popper"
           sideOffset={6}
-          className="z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border bg-white shadow-lg"
+          className="select-content z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border bg-white shadow-lg"
         >
           <SelectPrimitive.Viewport className="p-1">
             {options.map((option) => (

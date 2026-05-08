@@ -11,8 +11,8 @@
   --input: #cbd5e1;
   --primary: #0f172a;
   --primary-foreground: #f8fafc;
-  --accent: #0891b2;
-  --accent-foreground: #ecfeff;
+  --accent: #059669;
+  --accent-foreground: #ecfdf5;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
@@ -58,6 +58,164 @@ textarea {
 }
 
 ::selection {
-  background: #cffafe;
+  background: #d1fae5;
   color: #0f172a;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlay-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-show {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes dialog-hide {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+}
+
+@keyframes select-show {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes select-hide {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.motion-page {
+  animation: page-enter 180ms ease-out both;
+}
+
+.motion-panel {
+  animation: fade-in-up 220ms ease-out both;
+}
+
+.dialog-overlay {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+
+.dialog-overlay[data-state="open"] {
+  animation-name: overlay-show;
+}
+
+.dialog-overlay[data-state="closed"] {
+  animation-name: overlay-hide;
+}
+
+.dialog-content {
+  animation-duration: 180ms;
+  animation-timing-function: ease-out;
+}
+
+.dialog-content[data-state="open"] {
+  animation-name: dialog-show;
+}
+
+.dialog-content[data-state="closed"] {
+  animation-name: dialog-hide;
+}
+
+.select-content {
+  transform-origin: var(--radix-select-content-transform-origin);
+  animation-duration: 150ms;
+  animation-timing-function: ease-out;
+}
+
+.select-content[data-state="open"] {
+  animation-name: select-show;
+}
+
+.select-content[data-state="closed"] {
+  animation-name: select-hide;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

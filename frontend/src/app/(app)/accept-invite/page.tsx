@@ -52,8 +52,8 @@ export default function AcceptInvitePage() {
             <Field label="Token">
               <Input value={token} onChange={(event) => setToken(event.target.value)} required />
             </Field>
-            <Button disabled={loading} type="submit">
-              {loading ? "Accepting..." : "Accept invite"}
+            <Button isLoading={loading} loadingText="Accepting..." type="submit">
+              Accept invite
             </Button>
           </form>
         </CardContent>

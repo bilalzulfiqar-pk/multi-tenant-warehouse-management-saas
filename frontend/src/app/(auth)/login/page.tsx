@@ -64,8 +64,8 @@ export default function LoginPage() {
             required
           />
         </div>
-        <Button className="w-full" type="submit" disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
+        <Button className="w-full" type="submit" isLoading={loading} loadingText="Signing in...">
+          Sign in
         </Button>
       </form>
     </AuthCard>

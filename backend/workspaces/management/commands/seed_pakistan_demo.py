@@ -28,8 +28,6 @@ from workspaces.services import WorkspaceService
 
 
 DEMO_PASSWORD = "PakistanDemo123!"
-DEMO_SUBDOMAIN = "pakmart"
-DEMO_WORKSPACE_NAME = "PakMart Distribution"
 DEMO_REFERENCE_TYPE = "demo_seed"
 
 
@@ -58,75 +56,6 @@ CATEGORIES = (
     ("Electronics Accessories", "Small consumer electronics accessories."),
     ("Textile and Apparel", "Fabric rolls and ready-to-wear stock."),
     ("Household Goods", "General household supplies."),
-)
-
-
-WAREHOUSES = (
-    {
-        "code": "KHI-MAIN",
-        "name": "Karachi Main Distribution Centre",
-        "address_line1": "Plot 14, Korangi Industrial Area",
-        "address_line2": "Near Vita Chowrangi",
-        "city": "Karachi",
-        "country": "Pakistan",
-        "status": WarehouseStatus.ACTIVE,
-        "locations": (
-            ("KHI-A01", "Main Storage Aisle 01", LocationType.STORAGE),
-            ("KHI-FMV", "Fast Moving Goods Zone", LocationType.STORAGE),
-            ("KHI-QH", "Quality Hold Area", LocationType.OTHER),
-        ),
-    },
-    {
-        "code": "LHE-NORTH",
-        "name": "Lahore North Fulfilment Hub",
-        "address_line1": "Sundar Industrial Estate",
-        "address_line2": "Raiwind Road",
-        "city": "Lahore",
-        "country": "Pakistan",
-        "status": WarehouseStatus.ACTIVE,
-        "locations": (
-            ("LHE-A01", "Main Storage Aisle 01", LocationType.STORAGE),
-            ("LHE-BULK", "Bulk Stock Zone", LocationType.STORAGE),
-        ),
-    },
-    {
-        "code": "ISB-COLD",
-        "name": "Islamabad Cold Storage Hub",
-        "address_line1": "Street 7, I-9 Industrial Area",
-        "address_line2": "",
-        "city": "Islamabad",
-        "country": "Pakistan",
-        "status": WarehouseStatus.ACTIVE,
-        "locations": (
-            ("ISB-CH1", "Controlled Room 01", LocationType.STORAGE),
-            ("ISB-DRY", "Dry Goods Room", LocationType.STORAGE),
-        ),
-    },
-    {
-        "code": "FSD-TEX",
-        "name": "Faisalabad Textile Store",
-        "address_line1": "M-3 Industrial City",
-        "address_line2": "Sahianwala Interchange",
-        "city": "Faisalabad",
-        "country": "Pakistan",
-        "status": WarehouseStatus.ACTIVE,
-        "locations": (
-            ("FSD-R01", "Raw Fabric Rack 01", LocationType.STORAGE),
-            ("FSD-F01", "Finished Goods Rack 01", LocationType.STORAGE),
-        ),
-    },
-    {
-        "code": "PEW-TRANS",
-        "name": "Peshawar Transit Store",
-        "address_line1": "Industrial Estate Hayatabad",
-        "address_line2": "",
-        "city": "Peshawar",
-        "country": "Pakistan",
-        "status": WarehouseStatus.INACTIVE,
-        "locations": (
-            ("PEW-HOLD", "Temporary Holding Area", LocationType.OTHER),
-        ),
-    },
 )
 
 
@@ -230,73 +159,312 @@ PRODUCTS = (
 )
 
 
-OPENING_STOCK = (
-    ("BAS-RICE-1121", "KHI-MAIN", "KHI-A01", "320.000"),
-    ("BAS-ATTA-10KG", "KHI-MAIN", "KHI-A01", "280.000"),
-    ("BAS-SUGAR-1KG", "LHE-NORTH", "LHE-BULK", "240.000"),
-    ("BEV-TEA-950", "KHI-MAIN", "KHI-FMV", "220.000"),
-    ("BEV-JUICE-MANGO", "ISB-COLD", "ISB-DRY", "85.000"),
-    ("PC-SOAP-125", "LHE-NORTH", "LHE-A01", "600.000"),
-    ("HH-DETERGENT-1KG", "KHI-MAIN", "KHI-FMV", "210.000"),
-    ("ELEC-CABLE-C1", "KHI-MAIN", "KHI-FMV", "275.000"),
-    ("ELEC-POWER-20K", "LHE-NORTH", "LHE-A01", "40.000"),
-    ("TEX-COTTON-ROLL", "FSD-TEX", "FSD-R01", "450.000"),
-    ("APP-POLO-M", "FSD-TEX", "FSD-F01", "140.000"),
-    ("APP-DUPATTA-CHIFFON", "FSD-TEX", "FSD-F01", "75.000"),
-)
-
-
-STOCK_OUTS = (
-    ("BAS-RICE-1121", "KHI-MAIN", "KHI-A01", "60.000", "Retail replenishment"),
-    ("PC-SOAP-125", "LHE-NORTH", "LHE-A01", "180.000", "Wholesale order"),
-    ("ELEC-POWER-20K", "LHE-NORTH", "LHE-A01", "18.000", "Marketplace order"),
-    ("APP-POLO-M", "FSD-TEX", "FSD-F01", "55.000", "Outlet allocation"),
-)
-
-
-TRANSFERS = (
-    (
-        "BEV-TEA-950",
-        "KHI-MAIN",
-        "KHI-FMV",
-        "LHE-NORTH",
-        "LHE-A01",
-        "50.000",
-        "Lahore store replenishment",
-    ),
-    (
-        "ELEC-CABLE-C1",
-        "KHI-MAIN",
-        "KHI-FMV",
-        "LHE-NORTH",
-        "LHE-A01",
-        "75.000",
-        "Shift stock closer to Punjab demand",
-    ),
-)
-
-
-ADJUSTMENTS = (
-    (
-        "ELEC-POWER-20K",
-        "LHE-NORTH",
-        "LHE-A01",
-        "20.000",
-        "Cycle count after marketplace returns review",
-    ),
-    (
-        "APP-DUPATTA-CHIFFON",
-        "FSD-TEX",
-        "FSD-F01",
-        "25.000",
-        "Physical count after outlet allocation",
-    ),
-)
-
-
-PENDING_INVITES = (
-    ("regional.manager@pakdemo.example.com", WorkspaceRole.MANAGER),
-    ("inventory.auditor@pakdemo.example.com", WorkspaceRole.VIEWER),
+WORKSPACE_DEMOS = (
+    {
+        "name": "PakMart Distribution",
+        "subdomain": "pakmart",
+        "invites": (
+            ("regional.manager@pakdemo.example.com", WorkspaceRole.MANAGER),
+            ("inventory.auditor@pakdemo.example.com", WorkspaceRole.VIEWER),
+        ),
+        "warehouses": (
+            {
+                "code": "KHI-MAIN",
+                "name": "Karachi Main Distribution Centre",
+                "address_line1": "Plot 14, Korangi Industrial Area",
+                "address_line2": "Near Vita Chowrangi",
+                "city": "Karachi",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("KHI-A01", "Main Storage Aisle 01", LocationType.STORAGE),
+                    ("KHI-FMV", "Fast Moving Goods Zone", LocationType.STORAGE),
+                    ("KHI-QH", "Quality Hold Area", LocationType.OTHER),
+                ),
+            },
+            {
+                "code": "LHE-NORTH",
+                "name": "Lahore North Fulfilment Hub",
+                "address_line1": "Sundar Industrial Estate",
+                "address_line2": "Raiwind Road",
+                "city": "Lahore",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("LHE-A01", "Main Storage Aisle 01", LocationType.STORAGE),
+                    ("LHE-BULK", "Bulk Stock Zone", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "ISB-COLD",
+                "name": "Islamabad Cold Storage Hub",
+                "address_line1": "Street 7, I-9 Industrial Area",
+                "address_line2": "",
+                "city": "Islamabad",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("ISB-CH1", "Controlled Room 01", LocationType.STORAGE),
+                    ("ISB-DRY", "Dry Goods Room", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "FSD-TEX",
+                "name": "Faisalabad Textile Store",
+                "address_line1": "M-3 Industrial City",
+                "address_line2": "Sahianwala Interchange",
+                "city": "Faisalabad",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("FSD-R01", "Raw Fabric Rack 01", LocationType.STORAGE),
+                    ("FSD-F01", "Finished Goods Rack 01", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "PEW-TRANS",
+                "name": "Peshawar Transit Store",
+                "address_line1": "Industrial Estate Hayatabad",
+                "address_line2": "",
+                "city": "Peshawar",
+                "country": "Pakistan",
+                "status": WarehouseStatus.INACTIVE,
+                "locations": (
+                    ("PEW-HOLD", "Temporary Holding Area", LocationType.OTHER),
+                ),
+            },
+        ),
+        "opening_stock": (
+            ("BAS-RICE-1121", "KHI-MAIN", "KHI-A01", "320.000"),
+            ("BAS-ATTA-10KG", "KHI-MAIN", "KHI-A01", "280.000"),
+            ("BAS-SUGAR-1KG", "LHE-NORTH", "LHE-BULK", "240.000"),
+            ("BEV-TEA-950", "KHI-MAIN", "KHI-FMV", "220.000"),
+            ("BEV-JUICE-MANGO", "ISB-COLD", "ISB-DRY", "85.000"),
+            ("PC-SOAP-125", "LHE-NORTH", "LHE-A01", "600.000"),
+            ("HH-DETERGENT-1KG", "KHI-MAIN", "KHI-FMV", "210.000"),
+            ("ELEC-CABLE-C1", "KHI-MAIN", "KHI-FMV", "275.000"),
+            ("ELEC-POWER-20K", "LHE-NORTH", "LHE-A01", "40.000"),
+            ("TEX-COTTON-ROLL", "FSD-TEX", "FSD-R01", "450.000"),
+            ("APP-POLO-M", "FSD-TEX", "FSD-F01", "140.000"),
+            ("APP-DUPATTA-CHIFFON", "FSD-TEX", "FSD-F01", "75.000"),
+        ),
+        "stock_outs": (
+            (
+                "BAS-RICE-1121",
+                "KHI-MAIN",
+                "KHI-A01",
+                "60.000",
+                "Retail replenishment",
+            ),
+            ("PC-SOAP-125", "LHE-NORTH", "LHE-A01", "180.000", "Wholesale order"),
+            (
+                "ELEC-POWER-20K",
+                "LHE-NORTH",
+                "LHE-A01",
+                "18.000",
+                "Marketplace order",
+            ),
+            ("APP-POLO-M", "FSD-TEX", "FSD-F01", "55.000", "Outlet allocation"),
+        ),
+        "transfers": (
+            (
+                "BEV-TEA-950",
+                "KHI-MAIN",
+                "KHI-FMV",
+                "LHE-NORTH",
+                "LHE-A01",
+                "50.000",
+                "Lahore store replenishment",
+            ),
+            (
+                "ELEC-CABLE-C1",
+                "KHI-MAIN",
+                "KHI-FMV",
+                "LHE-NORTH",
+                "LHE-A01",
+                "75.000",
+                "Shift stock closer to Punjab demand",
+            ),
+        ),
+        "adjustments": (
+            (
+                "ELEC-POWER-20K",
+                "LHE-NORTH",
+                "LHE-A01",
+                "20.000",
+                "Cycle count after marketplace returns review",
+            ),
+            (
+                "APP-DUPATTA-CHIFFON",
+                "FSD-TEX",
+                "FSD-F01",
+                "25.000",
+                "Physical count after outlet allocation",
+            ),
+        ),
+    },
+    {
+        "name": "Punjab Traders Wholesale",
+        "subdomain": "punjabtraders",
+        "invites": (
+            ("buyer.punjab@pakdemo.example.com", WorkspaceRole.STAFF),
+            ("auditor.punjab@pakdemo.example.com", WorkspaceRole.VIEWER),
+        ),
+        "warehouses": (
+            {
+                "code": "LHE-MAIN",
+                "name": "Lahore Shah Alam Wholesale Store",
+                "address_line1": "Shah Alam Market",
+                "address_line2": "Near Circular Road",
+                "city": "Lahore",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("LHE-SH1", "Shah Alam Storage Rack 01", LocationType.STORAGE),
+                    ("LHE-BULK", "Wholesale Bulk Zone", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "MUX-SOUTH",
+                "name": "Multan South Depot",
+                "address_line1": "Industrial Estate Multan",
+                "address_line2": "",
+                "city": "Multan",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("MUX-A01", "Main Storage Aisle 01", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "RWP-TWIN",
+                "name": "Rawalpindi Twin Cities Hub",
+                "address_line1": "Saddar Logistics Yard",
+                "address_line2": "",
+                "city": "Rawalpindi",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("RWP-A01", "Dispatch Ready Storage", LocationType.STORAGE),
+                ),
+            },
+        ),
+        "opening_stock": (
+            ("BAS-RICE-1121", "LHE-MAIN", "LHE-SH1", "180.000"),
+            ("BAS-ATTA-10KG", "MUX-SOUTH", "MUX-A01", "350.000"),
+            ("BEV-TEA-950", "LHE-MAIN", "LHE-BULK", "160.000"),
+            ("PC-SOAP-125", "RWP-TWIN", "RWP-A01", "420.000"),
+            ("HH-DETERGENT-1KG", "LHE-MAIN", "LHE-BULK", "190.000"),
+            ("ELEC-CABLE-C1", "RWP-TWIN", "RWP-A01", "210.000"),
+            ("APP-POLO-M", "LHE-MAIN", "LHE-SH1", "90.000"),
+        ),
+        "stock_outs": (
+            ("BAS-ATTA-10KG", "MUX-SOUTH", "MUX-A01", "95.000", "South Punjab order"),
+            ("ELEC-CABLE-C1", "RWP-TWIN", "RWP-A01", "60.000", "Twin cities retail order"),
+            ("APP-POLO-M", "LHE-MAIN", "LHE-SH1", "35.000", "Liberty Market allocation"),
+        ),
+        "transfers": (
+            (
+                "BEV-TEA-950",
+                "LHE-MAIN",
+                "LHE-BULK",
+                "RWP-TWIN",
+                "RWP-A01",
+                "45.000",
+                "Move stock for Islamabad demand",
+            ),
+        ),
+        "adjustments": (
+            (
+                "PC-SOAP-125",
+                "RWP-TWIN",
+                "RWP-A01",
+                "360.000",
+                "Physical count after wholesale pickup",
+            ),
+        ),
+    },
+    {
+        "name": "Indus Retail Supplies",
+        "subdomain": "indussupplies",
+        "invites": (
+            ("operations.indus@pakdemo.example.com", WorkspaceRole.MANAGER),
+            ("viewer.indus@pakdemo.example.com", WorkspaceRole.VIEWER),
+        ),
+        "warehouses": (
+            {
+                "code": "KHI-PORT",
+                "name": "Karachi Portside Warehouse",
+                "address_line1": "West Wharf Road",
+                "address_line2": "Keamari",
+                "city": "Karachi",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("KHI-PA", "Portside Storage A", LocationType.STORAGE),
+                    ("KHI-FAST", "Fast Dispatch Rack", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "HYD-CENTRE",
+                "name": "Hyderabad Central Store",
+                "address_line1": "SITE Area Hyderabad",
+                "address_line2": "",
+                "city": "Hyderabad",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("HYD-A01", "Main Storage Aisle 01", LocationType.STORAGE),
+                ),
+            },
+            {
+                "code": "QTA-DRY",
+                "name": "Quetta Dry Goods Depot",
+                "address_line1": "Industrial Estate Eastern Bypass",
+                "address_line2": "",
+                "city": "Quetta",
+                "country": "Pakistan",
+                "status": WarehouseStatus.ACTIVE,
+                "locations": (
+                    ("QTA-A01", "Dry Goods Rack 01", LocationType.STORAGE),
+                ),
+            },
+        ),
+        "opening_stock": (
+            ("BAS-RICE-1121", "KHI-PORT", "KHI-PA", "260.000"),
+            ("BAS-SUGAR-1KG", "HYD-CENTRE", "HYD-A01", "520.000"),
+            ("BEV-JUICE-MANGO", "KHI-PORT", "KHI-FAST", "70.000"),
+            ("PC-SOAP-125", "HYD-CENTRE", "HYD-A01", "260.000"),
+            ("ELEC-POWER-20K", "KHI-PORT", "KHI-FAST", "32.000"),
+            ("TEX-COTTON-ROLL", "QTA-DRY", "QTA-A01", "380.000"),
+            ("APP-DUPATTA-CHIFFON", "KHI-PORT", "KHI-PA", "65.000"),
+        ),
+        "stock_outs": (
+            ("BEV-JUICE-MANGO", "KHI-PORT", "KHI-FAST", "20.000", "Karachi store order"),
+            ("ELEC-POWER-20K", "KHI-PORT", "KHI-FAST", "11.000", "Online sale allocation"),
+            ("TEX-COTTON-ROLL", "QTA-DRY", "QTA-A01", "140.000", "Quetta textile order"),
+        ),
+        "transfers": (
+            (
+                "BAS-SUGAR-1KG",
+                "HYD-CENTRE",
+                "HYD-A01",
+                "KHI-PORT",
+                "KHI-FAST",
+                "120.000",
+                "Move sugar closer to Karachi demand",
+            ),
+        ),
+        "adjustments": (
+            (
+                "APP-DUPATTA-CHIFFON",
+                "KHI-PORT",
+                "KHI-PA",
+                "35.000",
+                "Physical count after Eid campaign allocation",
+            ),
+        ),
+    },
 )
 
 
@@ -318,30 +486,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.password = options["password"]
         self.skip_stock = options["skip_stock"]
+        users = self.create_users()
+        owner = users[WorkspaceRole.OWNER]
+        summaries = []
 
-        with transaction.atomic():
-            users = self.create_users()
-            owner = users[WorkspaceRole.OWNER]
-            workspace = self.create_workspace(owner)
-            self.create_memberships(workspace, users, owner)
-            CatalogSeedService.seed_default_units(workspace)
-            units = self.create_units(workspace)
-            categories = self.create_categories(workspace)
-            warehouses, locations = self.create_warehouses(workspace)
-            products = self.create_products(workspace, units, categories)
-            invites = self.create_pending_invites(workspace, owner)
+        for demo in WORKSPACE_DEMOS:
+            summaries.append(self.seed_workspace_demo(demo, users, owner))
 
-        stock_seeded = False
-        if not self.skip_stock:
-            stock_seeded = self.seed_stock_if_needed(
-                workspace=workspace,
-                actor=owner,
-                products=products,
-                warehouses=warehouses,
-                locations=locations,
-            )
-
-        self.write_summary(workspace, users, invites, stock_seeded)
+        self.write_summary(users, summaries)
 
     def create_users(self):
         User = get_user_model()
@@ -355,11 +507,39 @@ class Command(BaseCommand):
             users[role] = user
         return users
 
-    def create_workspace(self, owner):
+    def seed_workspace_demo(self, demo, users, owner):
+        with transaction.atomic():
+            workspace = self.create_workspace(owner, demo)
+            self.create_memberships(workspace, users, owner)
+            CatalogSeedService.seed_default_units(workspace)
+            units = self.create_units(workspace)
+            categories = self.create_categories(workspace)
+            warehouses, locations = self.create_warehouses(workspace, demo["warehouses"])
+            products = self.create_products(workspace, units, categories)
+            invites = self.create_pending_invites(workspace, owner, demo["invites"])
+
+        stock_seeded = False
+        if not self.skip_stock:
+            stock_seeded = self.seed_stock_if_needed(
+                workspace=workspace,
+                actor=owner,
+                products=products,
+                warehouses=warehouses,
+                locations=locations,
+                demo=demo,
+            )
+
+        return {
+            "workspace": workspace,
+            "invites": invites,
+            "stock_seeded": stock_seeded,
+        }
+
+    def create_workspace(self, owner, demo):
         try:
-            workspace = Workspace.objects.get(subdomain=DEMO_SUBDOMAIN)
-            workspace.name = DEMO_WORKSPACE_NAME
-            workspace.slug = DEMO_SUBDOMAIN
+            workspace = Workspace.objects.get(subdomain=demo["subdomain"])
+            workspace.name = demo["name"]
+            workspace.slug = demo["subdomain"]
             workspace.status = WorkspaceStatus.ACTIVE
             workspace.default_timezone = "Asia/Karachi"
             workspace.low_stock_dashboard_enabled = True
@@ -379,8 +559,8 @@ class Command(BaseCommand):
         except Workspace.DoesNotExist:
             workspace = WorkspaceService.create_workspace(
                 owner_user=owner,
-                name=DEMO_WORKSPACE_NAME,
-                subdomain=DEMO_SUBDOMAIN,
+                name=demo["name"],
+                subdomain=demo["subdomain"],
             )
             workspace.default_timezone = "Asia/Karachi"
             workspace.save(update_fields=["default_timezone", "updated_at"])
@@ -423,10 +603,10 @@ class Command(BaseCommand):
             categories[name] = category
         return categories
 
-    def create_warehouses(self, workspace):
+    def create_warehouses(self, workspace, warehouse_data):
         warehouses = {}
         locations = {}
-        for item in WAREHOUSES:
+        for item in warehouse_data:
             warehouse, _ = Warehouse.objects.update_or_create(
                 workspace=workspace,
                 code=item["code"],
@@ -475,9 +655,9 @@ class Command(BaseCommand):
             products[item["sku"]] = product
         return products
 
-    def create_pending_invites(self, workspace, owner):
+    def create_pending_invites(self, workspace, owner, invites_data):
         invites = []
-        for email, role in PENDING_INVITES:
+        for email, role in invites_data:
             invite = WorkspaceInvite.objects.filter(
                 workspace=workspace,
                 email=email,
@@ -493,7 +673,7 @@ class Command(BaseCommand):
             invites.append(invite)
         return invites
 
-    def seed_stock_if_needed(self, workspace, actor, products, warehouses, locations):
+    def seed_stock_if_needed(self, workspace, actor, products, warehouses, locations, demo):
         if StockMovement.objects.filter(
             workspace=workspace,
             reference_type=DEMO_REFERENCE_TYPE,
@@ -501,7 +681,7 @@ class Command(BaseCommand):
             return False
 
         with transaction.atomic():
-            for sku, warehouse_code, location_code, quantity in OPENING_STOCK:
+            for sku, warehouse_code, location_code, quantity in demo["opening_stock"]:
                 InventoryService.stock_in(
                     workspace=workspace,
                     product=products[sku],
@@ -511,10 +691,10 @@ class Command(BaseCommand):
                     actor=actor,
                     reason="Opening stock for Pakistan demo",
                     reference_type=DEMO_REFERENCE_TYPE,
-                    notes="Pakistan demo seed",
+                    notes=f"{workspace.subdomain} Pakistan demo seed",
                 )
 
-            for sku, warehouse_code, location_code, quantity, reason in STOCK_OUTS:
+            for sku, warehouse_code, location_code, quantity, reason in demo["stock_outs"]:
                 InventoryService.stock_out(
                     workspace=workspace,
                     product=products[sku],
@@ -524,7 +704,7 @@ class Command(BaseCommand):
                     actor=actor,
                     reason=reason,
                     reference_type=DEMO_REFERENCE_TYPE,
-                    notes="Pakistan demo seed",
+                    notes=f"{workspace.subdomain} Pakistan demo seed",
                 )
 
             for (
@@ -535,7 +715,7 @@ class Command(BaseCommand):
                 destination_location_code,
                 quantity,
                 reason,
-            ) in TRANSFERS:
+            ) in demo["transfers"]:
                 InventoryService.transfer_stock(
                     workspace=workspace,
                     product=products[sku],
@@ -551,7 +731,7 @@ class Command(BaseCommand):
                     actor=actor,
                     reason=reason,
                     reference_type=DEMO_REFERENCE_TYPE,
-                    notes="Pakistan demo seed",
+                    notes=f"{workspace.subdomain} Pakistan demo seed",
                 )
 
             for (
@@ -560,7 +740,7 @@ class Command(BaseCommand):
                 location_code,
                 counted_quantity,
                 reason,
-            ) in ADJUSTMENTS:
+            ) in demo["adjustments"]:
                 InventoryService.adjust_stock(
                     workspace=workspace,
                     product=products[sku],
@@ -569,30 +749,29 @@ class Command(BaseCommand):
                     counted_quantity=Decimal(counted_quantity),
                     actor=actor,
                     reason=reason,
-                    notes="Pakistan demo seed",
+                    notes=f"{workspace.subdomain} Pakistan demo seed",
                 )
 
         return True
 
-    def write_summary(self, workspace, users, invites, stock_seeded):
+    def write_summary(self, users, summaries):
         self.stdout.write(self.style.SUCCESS("Pakistan demo data is ready."))
         self.stdout.write("")
-        self.stdout.write(f"Workspace: {workspace.name}")
-        self.stdout.write(f"Subdomain: {workspace.subdomain}")
-        self.stdout.write(f"Tenant API host: {workspace.subdomain}.localhost:8000")
         self.stdout.write(f"Password for all demo users: {self.password}")
         self.stdout.write("")
         self.stdout.write("Demo users:")
         for role, user in users.items():
             self.stdout.write(f"- {role}: {user.email}")
         self.stdout.write("")
-        self.stdout.write("Pending invite emails:")
-        for invite in invites:
-            self.stdout.write(f"- {invite.email} ({invite.role})")
-        self.stdout.write("")
-        if self.skip_stock:
-            self.stdout.write("Stock movements skipped by --skip-stock.")
-        elif stock_seeded:
-            self.stdout.write("Stock movements seeded.")
-        else:
-            self.stdout.write("Stock movements already existed; skipped duplicate seed.")
+        self.stdout.write("Workspaces:")
+        for summary in summaries:
+            workspace = summary["workspace"]
+            self.stdout.write(f"- {workspace.name} ({workspace.subdomain})")
+            self.stdout.write(f"  Tenant API host: {workspace.subdomain}.localhost:8000")
+            self.stdout.write(f"  Pending invites: {len(summary['invites'])}")
+            if self.skip_stock:
+                self.stdout.write("  Stock movements skipped by --skip-stock.")
+            elif summary["stock_seeded"]:
+                self.stdout.write("  Stock movements seeded.")
+            else:
+                self.stdout.write("  Stock movements already existed; skipped duplicate seed.")

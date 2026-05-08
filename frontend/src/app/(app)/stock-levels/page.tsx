@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,13 @@ export default function StockLevelsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(stockLevels.data?.results || []).map((level) => (
+            {stockLevels.isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <TableSkeleton columns={7} />
+                </TableCell>
+              </TableRow>
+            ) : (stockLevels.data?.results || []).map((level) => (
               <TableRow key={level.id}>
                 <TableCell className="font-medium text-slate-950">{level.product_sku}</TableCell>
                 <TableCell>{level.product_name}</TableCell>

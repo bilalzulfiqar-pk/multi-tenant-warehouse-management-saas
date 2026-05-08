@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { RoleBadge, StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,13 @@ export default function TeamPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(members.data || []).map((member) => (
+                {members.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <TableSkeleton columns={5} />
+                    </TableCell>
+                  </TableRow>
+                ) : (members.data || []).map((member) => (
                   <TableRow key={member.id}>
                     <TableCell>
                       <p className="font-medium text-slate-950">{member.user.full_name || member.user.email}</p>
@@ -158,7 +165,13 @@ export default function TeamPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(invites.data || []).map((invite) => (
+                {invites.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <TableSkeleton columns={5} />
+                    </TableCell>
+                  </TableRow>
+                ) : (invites.data || []).map((invite) => (
                   <TableRow key={invite.id}>
                     <TableCell>{invite.email}</TableCell>
                     <TableCell><RoleBadge role={invite.role as WorkspaceRole} /></TableCell>

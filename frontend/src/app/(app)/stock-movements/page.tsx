@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { MovementBadge } from "@/components/domain/badges";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -73,7 +74,13 @@ export default function StockMovementsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(movements.data?.results || []).map((movement) => (
+            {movements.isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8}>
+                  <TableSkeleton columns={8} />
+                </TableCell>
+              </TableRow>
+            ) : (movements.data?.results || []).map((movement) => (
               <TableRow key={movement.id}>
                 <TableCell>{formatDateTime(movement.created_at)}</TableCell>
                 <TableCell><MovementBadge type={movement.movement_type} /></TableCell>

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/hooks/use-session";
@@ -100,6 +101,7 @@ function StockInOutForm({ type }: { type: "stock-in" | "stock-out" }) {
   const [location, setLocation] = useState(defaults.location);
   const [loading, setLoading] = useState(false);
   const available = availableQuantity(stockLevels.data, product, warehouse, location);
+  const optionsLoading = products.isLoading || warehouses.isLoading || locations.isLoading;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,6 +131,9 @@ function StockInOutForm({ type }: { type: "stock-in" | "stock-out" }) {
 
   return (
     <InventoryFormCard title={type === "stock-in" ? "Add stock" : "Remove stock"}>
+      {optionsLoading ? (
+        <InventoryOptionsLoader />
+      ) : (
       <form className="grid gap-4" onSubmit={submit}>
         <InventorySelectors
           products={products.data || []}
@@ -147,8 +152,11 @@ function StockInOutForm({ type }: { type: "stock-in" | "stock-out" }) {
         <Field label="Quantity"><Input name="quantity" placeholder="5.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder={type === "stock-in" ? "Initial stock" : "Operational removal"} /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button disabled={loading} type="submit">{loading ? "Submitting..." : type === "stock-in" ? "Add stock" : "Remove stock"}</Button>
+        <Button isLoading={loading} loadingText="Submitting..." type="submit">
+          {type === "stock-in" ? "Add stock" : "Remove stock"}
+        </Button>
       </form>
+      )}
     </InventoryFormCard>
   );
 }
@@ -160,10 +168,13 @@ function AdjustForm() {
   const [product, setProduct] = useState(defaults.product);
   const [warehouse, setWarehouse] = useState(defaults.warehouse);
   const [location, setLocation] = useState(defaults.location);
+  const [loading, setLoading] = useState(false);
   const current = availableQuantity(stockLevels.data, product, warehouse, location);
+  const optionsLoading = products.isLoading || warehouses.isLoading || locations.isLoading;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLoading(true);
     const form = new FormData(event.currentTarget);
     try {
       await tenantApi("inventory/adjust", {
@@ -181,11 +192,16 @@ function AdjustForm() {
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Adjustment failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <InventoryFormCard title="Set stock to physical count">
+      {optionsLoading ? (
+        <InventoryOptionsLoader />
+      ) : (
       <form className="grid gap-4" onSubmit={submit}>
         <InventorySelectors
           products={products.data || []}
@@ -202,8 +218,9 @@ function AdjustForm() {
         <Field label="Counted quantity" hint="Adjustment sets stock to the physical count."><Input name="counted_quantity" placeholder="20.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder="Physical count correction" required /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button type="submit">Set counted quantity</Button>
+        <Button isLoading={loading} loadingText="Submitting..." type="submit">Set counted quantity</Button>
       </form>
+      )}
     </InventoryFormCard>
   );
 }
@@ -217,13 +234,16 @@ function TransferForm() {
   const [sourceLocation, setSourceLocation] = useState(defaults.source_location);
   const [destinationWarehouse, setDestinationWarehouse] = useState("");
   const [destinationLocation, setDestinationLocation] = useState("");
+  const [loading, setLoading] = useState(false);
   const available = availableQuantity(stockLevels.data, product, sourceWarehouse, sourceLocation);
   const selectedProduct = products.data?.find((item) => item.id === product);
   const source = locations.data?.find((item) => item.id === sourceLocation);
   const destination = locations.data?.find((item) => item.id === destinationLocation);
+  const optionsLoading = products.isLoading || warehouses.isLoading || locations.isLoading;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLoading(true);
     const form = new FormData(event.currentTarget);
     try {
       await tenantApi("inventory/transfer", {
@@ -243,11 +263,16 @@ function TransferForm() {
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Transfer failed");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <InventoryFormCard title="Transfer stock between locations">
+      {optionsLoading ? (
+        <InventoryOptionsLoader />
+      ) : (
       <form className="grid gap-4" onSubmit={submit}>
         <Field label="Product">
           <NativeSelect value={product} onChange={(event) => setProduct(event.target.value)} required>
@@ -281,8 +306,9 @@ function TransferForm() {
         <Field label="Quantity"><Input name="quantity" placeholder="5.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder="Move to another location" /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button type="submit">Transfer stock</Button>
+        <Button isLoading={loading} loadingText="Submitting..." type="submit">Transfer stock</Button>
       </form>
+      )}
     </InventoryFormCard>
   );
 }
@@ -293,6 +319,20 @@ function InventoryFormCard({ title, children }: { title: string; children: React
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
+  );
+}
+
+function InventoryOptionsLoader() {
+  return (
+    <div className="grid gap-4" role="status" aria-label="Loading inventory form options">
+      <Skeleton className="h-9 w-full" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-9 w-36" />
+    </div>
   );
 }
 
