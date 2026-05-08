@@ -18,6 +18,9 @@ Backend-first Django REST Framework portfolio project for a multi-tenant warehou
 - drf-spectacular
 - pytest and pytest-django
 - Docker Compose
+- Next.js 16, React 19, and TypeScript
+- Tailwind CSS and shadcn-style UI primitives
+- TanStack Query
 
 ## MVP Features
 
@@ -38,10 +41,11 @@ Backend-first Django REST Framework portfolio project for a multi-tenant warehou
 - Page-number pagination, filtering, search, and ordering for list APIs.
 - Swagger UI, OpenAPI schema, and ReDoc.
 - Automated tests for the highest-risk business rules.
+- Next.js frontend dashboard with HttpOnly JWT cookies, tenant-aware API forwarding, role-aware navigation, and inventory workflow screens.
 
 ## MVP Boundaries
 
-The MVP intentionally excludes Stripe, billing, subscription plans, AI, frontend work, receiving workflows, dispatch workflows, supplier/customer modules, email notifications, PDF reports, and CSV import/export.
+The backend MVP intentionally excludes Stripe, billing, subscription plans, AI, receiving workflows, dispatch workflows, supplier/customer modules, email notifications, PDF reports, and CSV import/export. The frontend added afterward stays inside those same product boundaries.
 
 ## Architecture Highlights
 
@@ -103,6 +107,16 @@ Start the stack:
 docker compose up -d
 ```
 
+The backend API runs at `http://localhost:8000`; the optional Next.js frontend service runs at `http://localhost:3000`.
+
+For local frontend development outside Docker:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
 Run Django checks:
 
 ```powershell
@@ -113,6 +127,16 @@ Run tests:
 
 ```powershell
 docker compose run --rm backend pytest
+```
+
+Run frontend checks:
+
+```powershell
+cd frontend
+npm run lint
+npm run typecheck
+npm test
+npm run build
 ```
 
 Check Celery through Redis:
@@ -139,6 +163,9 @@ docker compose down
 - `REDIS_URL`
 - `CELERY_BROKER_URL`
 - `CELERY_RESULT_BACKEND`
+- `BACKEND_INTERNAL_ORIGIN`
+- `TENANT_BACKEND_HOST_SUFFIX`
+- `NEXT_PUBLIC_APP_NAME`
 
 Docker Compose provides development defaults, so copying `.env.example` is optional for local development.
 
@@ -275,12 +302,12 @@ The suite covers authentication, tenancy, role permissions, invites, warehouse/c
 - Added audit logging for important workspace, setup, and stock mutation events.
 - Exposed a documented REST API with Swagger/OpenAPI and pagination/filter/search/order support.
 - Covered high-risk business rules with automated pytest tests running inside Docker.
+- Built a role-aware Next.js SaaS dashboard with a BFF layer that keeps JWTs out of browser storage.
 
 ## Post-MVP Roadmap
 
 Reasonable future improvements:
 
-- React or Next.js frontend.
 - Seed/demo data command.
 - Swagger screenshots or demo GIFs for the repository.
 - Supplier/customer modules.
