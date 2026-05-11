@@ -39,6 +39,10 @@ DEMO_USERS = (
     ("viewer@pakdemo.example.com", "Hira Siddiqui", WorkspaceRole.VIEWER),
 )
 
+LIMITED_DEMO_USER = ("nadia@pakdemo.example.com", "Nadia Sheikh")
+LIMITED_USER_OLD_WORKSPACE_SUBDOMAIN = "pakmart"
+LIMITED_USER_OLD_WORKSPACE_ROLE = WorkspaceRole.MANAGER
+
 
 EXTRA_UNITS = (
     ("Bags", "bag"),
@@ -468,6 +472,87 @@ WORKSPACE_DEMOS = (
 )
 
 
+LIMITED_USER_WORKSPACE_DEMO = {
+    "name": "Karachi Food Services",
+    "subdomain": "karachifoods",
+    "invites": (
+        ("coldchain.lead@pakdemo.example.com", WorkspaceRole.STAFF),
+        ("finance.foods@pakdemo.example.com", WorkspaceRole.VIEWER),
+    ),
+    "warehouses": (
+        {
+            "code": "KHI-FOOD",
+            "name": "Karachi Food Services Warehouse",
+            "address_line1": "Block 22, Federal B Area",
+            "address_line2": "Near Super Highway Link Road",
+            "city": "Karachi",
+            "country": "Pakistan",
+            "status": WarehouseStatus.ACTIVE,
+            "locations": (
+                ("KHI-DRY", "Dry Grocery Storage", LocationType.STORAGE),
+                ("KHI-FAST", "Fast Moving Food Stock", LocationType.STORAGE),
+            ),
+        },
+        {
+            "code": "HYD-FOOD",
+            "name": "Hyderabad Food Depot",
+            "address_line1": "SITE Area Hyderabad",
+            "address_line2": "",
+            "city": "Hyderabad",
+            "country": "Pakistan",
+            "status": WarehouseStatus.ACTIVE,
+            "locations": (
+                ("HYD-A01", "Main Food Storage", LocationType.STORAGE),
+            ),
+        },
+        {
+            "code": "LHE-FOOD",
+            "name": "Lahore Food Cross-Dock",
+            "address_line1": "Kot Lakhpat Industrial Area",
+            "address_line2": "",
+            "city": "Lahore",
+            "country": "Pakistan",
+            "status": WarehouseStatus.ACTIVE,
+            "locations": (
+                ("LHE-A01", "Northbound Allocation Rack", LocationType.STORAGE),
+            ),
+        },
+    ),
+    "opening_stock": (
+        ("BAS-RICE-1121", "KHI-FOOD", "KHI-DRY", "210.000"),
+        ("BAS-ATTA-10KG", "KHI-FOOD", "KHI-DRY", "260.000"),
+        ("BAS-SUGAR-1KG", "HYD-FOOD", "HYD-A01", "380.000"),
+        ("BEV-TEA-950", "KHI-FOOD", "KHI-FAST", "135.000"),
+        ("BEV-JUICE-MANGO", "KHI-FOOD", "KHI-FAST", "95.000"),
+        ("HH-DETERGENT-1KG", "LHE-FOOD", "LHE-A01", "120.000"),
+    ),
+    "stock_outs": (
+        ("BAS-ATTA-10KG", "KHI-FOOD", "KHI-DRY", "85.000", "Restaurant supply order"),
+        ("BEV-JUICE-MANGO", "KHI-FOOD", "KHI-FAST", "45.000", "Cafe chain replenishment"),
+    ),
+    "transfers": (
+        (
+            "BAS-SUGAR-1KG",
+            "HYD-FOOD",
+            "HYD-A01",
+            "KHI-FOOD",
+            "KHI-FAST",
+            "110.000",
+            "Move sugar for Karachi demand",
+        ),
+    ),
+    "adjustments": (
+        (
+            "BEV-TEA-950",
+            "KHI-FOOD",
+            "KHI-FAST",
+            "105.000",
+            "Physical count after bulk tea allocation",
+        ),
+    ),
+}
+
+
 class Command(BaseCommand):
     help = "Seed Pakistan-region demo data for local exploration and frontend testing."
 
@@ -487,25 +572,49 @@ class Command(BaseCommand):
         self.password = options["password"]
         self.skip_stock = options["skip_stock"]
         users = self.create_users()
+        limited_user = self.create_limited_user()
         owner = users[WorkspaceRole.OWNER]
         summaries = []
 
         for demo in WORKSPACE_DEMOS:
             summaries.append(self.seed_workspace_demo(demo, users, owner))
 
-        self.write_summary(users, summaries)
+        limited_old_workspace = self.create_limited_user_old_workspace_membership(
+            limited_user=limited_user,
+            invited_by=owner,
+        )
+        limited_summary = self.seed_workspace_demo(
+            LIMITED_USER_WORKSPACE_DEMO,
+            {WorkspaceRole.OWNER: limited_user},
+            limited_user,
+        )
+
+        self.write_summary(
+            users,
+            limited_user,
+            summaries,
+            limited_summary,
+            limited_old_workspace,
+        )
 
     def create_users(self):
+        return {
+            role: self.create_user(email=email, full_name=full_name)
+            for email, full_name, role in DEMO_USERS
+        }
+
+    def create_limited_user(self):
+        email, full_name = LIMITED_DEMO_USER
+        return self.create_user(email=email, full_name=full_name)
+
+    def create_user(self, email, full_name):
         User = get_user_model()
-        users = {}
-        for email, full_name, role in DEMO_USERS:
-            user, _ = User.objects.get_or_create(email=email)
-            user.full_name = full_name
-            user.is_active = True
-            user.set_password(self.password)
-            user.save(update_fields=["full_name", "is_active", "password"])
-            users[role] = user
-        return users
+        user, _ = User.objects.get_or_create(email=email)
+        user.full_name = full_name
+        user.is_active = True
+        user.set_password(self.password)
+        user.save(update_fields=["full_name", "is_active", "password"])
+        return user
 
     def seed_workspace_demo(self, demo, users, owner):
         with transaction.atomic():
@@ -578,6 +687,20 @@ class Command(BaseCommand):
                     "joined_at": timezone.now(),
                 },
             )
+
+    def create_limited_user_old_workspace_membership(self, limited_user, invited_by):
+        workspace = Workspace.objects.get(subdomain=LIMITED_USER_OLD_WORKSPACE_SUBDOMAIN)
+        WorkspaceMembership.objects.update_or_create(
+            workspace=workspace,
+            user=limited_user,
+            defaults={
+                "role": LIMITED_USER_OLD_WORKSPACE_ROLE,
+                "status": MembershipStatus.ACTIVE,
+                "invited_by": invited_by,
+                "joined_at": timezone.now(),
+            },
+        )
+        return workspace
 
     def create_units(self, workspace):
         units = {}
@@ -754,7 +877,14 @@ class Command(BaseCommand):
 
         return True
 
-    def write_summary(self, users, summaries):
+    def write_summary(
+        self,
+        users,
+        limited_user,
+        summaries,
+        limited_summary,
+        limited_old_workspace,
+    ):
         self.stdout.write(self.style.SUCCESS("Pakistan demo data is ready."))
         self.stdout.write("")
         self.stdout.write(f"Password for all demo users: {self.password}")
@@ -762,9 +892,10 @@ class Command(BaseCommand):
         self.stdout.write("Demo users:")
         for role, user in users.items():
             self.stdout.write(f"- {role}: {user.email}")
+        self.stdout.write(f"- limited owner/manager: {limited_user.email}")
         self.stdout.write("")
         self.stdout.write("Workspaces:")
-        for summary in summaries:
+        for summary in [*summaries, limited_summary]:
             workspace = summary["workspace"]
             self.stdout.write(f"- {workspace.name} ({workspace.subdomain})")
             self.stdout.write(f"  Tenant API host: {workspace.subdomain}.localhost:8000")
@@ -775,3 +906,9 @@ class Command(BaseCommand):
                 self.stdout.write("  Stock movements seeded.")
             else:
                 self.stdout.write("  Stock movements already existed; skipped duplicate seed.")
+        self.stdout.write("")
+        self.stdout.write(
+            f"{limited_user.email} can access old workspace "
+            f"{limited_old_workspace.subdomain} and new workspace "
+            f"{limited_summary['workspace'].subdomain}."
+        )
