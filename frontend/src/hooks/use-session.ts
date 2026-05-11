@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { apiRequest, jsonBody } from "@/lib/api-client";
+import { buildTenantUrl } from "@/lib/tenant-host";
 import type { Session, Workspace } from "@/lib/types";
 
 export function useSession() {
@@ -29,18 +30,16 @@ export function useRequireSession() {
 
 export function useWorkspaceSwitcher() {
   const queryClient = useQueryClient();
-  const router = useRouter();
   return useMutation({
     mutationFn: (workspace: Workspace) =>
       apiRequest<{ ok: boolean }>("/api/session/workspace", {
         method: "POST",
         body: jsonBody({ subdomain: workspace.subdomain }),
       }),
-    onSuccess: async () => {
+    onSuccess: async (_data, workspace) => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
-      router.push("/dashboard");
-      router.refresh();
+      window.location.assign(buildTenantUrl(workspace.subdomain, window.location.href));
     },
   });
 }

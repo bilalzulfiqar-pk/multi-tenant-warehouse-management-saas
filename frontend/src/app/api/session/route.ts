@@ -1,8 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { ACCESS_COOKIE, WORKSPACE_COOKIE, workspaceCookieOptions } from "@/lib/server/cookies";
+import {
+  ACCESS_COOKIE,
+  WORKSPACE_COOKIE,
+  expiredCookieOptions,
+  workspaceCookieOptions,
+} from "@/lib/server/cookies";
 import { djangoRequest, refreshAccessToken } from "@/lib/server/django";
+import { getTenantSubdomainFromHost } from "@/lib/tenant-host";
 import type { Paginated, Session, User, Workspace } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -14,10 +20,12 @@ async function getJson<T>(response: Response) {
   return (await response.json()) as T;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const cookieStore = await cookies();
   let accessToken = cookieStore.get(ACCESS_COOKIE)?.value;
-  const selectedSubdomain = cookieStore.get(WORKSPACE_COOKIE)?.value || null;
+  const hostSubdomain = getTenantSubdomainFromHost(request.headers.get("host"));
+  const cookieSubdomain = cookieStore.get(WORKSPACE_COOKIE)?.value || null;
+  const selectedSubdomain = hostSubdomain || cookieSubdomain;
 
   if (!accessToken) {
     return NextResponse.json<Session>({
@@ -54,11 +62,15 @@ export async function GET() {
     : workspacePayload.results;
   let workspace = workspaces.find((item) => item.subdomain === selectedSubdomain) || null;
 
-  if (!workspace && selectedSubdomain) {
-    cookieStore.set(WORKSPACE_COOKIE, "", { path: "/", maxAge: 0 });
+  if (workspace && workspace.subdomain !== cookieSubdomain) {
+    cookieStore.set(WORKSPACE_COOKIE, workspace.subdomain, workspaceCookieOptions);
   }
 
-  if (!workspace && workspaces.length === 1) {
+  if (!hostSubdomain && !workspace && selectedSubdomain) {
+    cookieStore.set(WORKSPACE_COOKIE, "", expiredCookieOptions);
+  }
+
+  if (!hostSubdomain && !workspace && workspaces.length === 1) {
     workspace = workspaces[0];
     cookieStore.set(WORKSPACE_COOKIE, workspace.subdomain, workspaceCookieOptions);
   }

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import { NativeSelect } from "@/components/ui/select";
 import { useRequireSession, useWorkspaceSwitcher } from "@/hooks/use-session";
 import { apiRequest } from "@/lib/api-client";
 import { canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
+import { buildTenantUrl, getTenantSubdomainFromHost } from "@/lib/tenant-host";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -45,6 +47,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const session = sessionQuery.data;
   const role = session?.workspace?.role;
   const help = roleHelp(role);
+
+  useEffect(() => {
+    if (!session?.workspace || pathname === "/workspaces") {
+      return;
+    }
+
+    const hostSubdomain = getTenantSubdomainFromHost(window.location.host);
+    if (hostSubdomain !== session.workspace.subdomain) {
+      window.location.replace(
+        buildTenantUrl(session.workspace.subdomain, window.location.href, pathname || "/dashboard"),
+      );
+    }
+  }, [pathname, session?.workspace]);
 
   async function logout() {
     await apiRequest("/api/auth/logout", { method: "POST" });

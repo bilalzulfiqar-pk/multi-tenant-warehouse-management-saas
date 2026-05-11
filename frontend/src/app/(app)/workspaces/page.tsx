@@ -2,7 +2,6 @@
 
 import { Building2, ExternalLink, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -13,12 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest, globalApi, jsonBody } from "@/lib/api-client";
+import { buildTenantUrl } from "@/lib/tenant-host";
 import type { Workspace } from "@/lib/types";
 import { compactUrlHost } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
 
 export default function WorkspacesPage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const sessionQuery = useSession();
   const [subdomain, setSubdomain] = useState("");
@@ -32,8 +31,7 @@ export default function WorkspacesPage() {
     });
     await queryClient.invalidateQueries({ queryKey: ["session"] });
     await queryClient.invalidateQueries({ queryKey: ["tenant"] });
-    router.push("/dashboard");
-    router.refresh();
+    window.location.assign(buildTenantUrl(workspace.subdomain, window.location.href));
   }
 
   async function createWorkspace(event: React.FormEvent<HTMLFormElement>) {

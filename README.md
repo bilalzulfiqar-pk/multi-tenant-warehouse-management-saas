@@ -109,6 +109,8 @@ docker compose up -d
 
 The backend API runs at `http://localhost:8000`; the optional Next.js frontend service runs at `http://localhost:3000`.
 
+The frontend uses `lvh.me` as the local shared-cookie domain so one frontend login works across workspace subdomains. Use tenant URLs such as `http://acme.lvh.me:3000/dashboard`. If you open `localhost` or `*.localhost` pages, the frontend redirects them to matching `lvh.me` URLs before login cookies are created.
+
 For local frontend development outside Docker:
 
 ```powershell
@@ -165,6 +167,9 @@ docker compose down
 - `CELERY_RESULT_BACKEND`
 - `BACKEND_INTERNAL_ORIGIN`
 - `TENANT_BACKEND_HOST_SUFFIX`
+- `FRONTEND_COOKIE_DOMAIN`
+- `FRONTEND_BASE_DOMAIN`
+- `NEXT_PUBLIC_FRONTEND_BASE_DOMAIN`
 - `NEXT_PUBLIC_APP_NAME`
 
 Docker Compose provides development defaults, so copying `.env.example` is optional for local development.
@@ -177,6 +182,7 @@ Tenant APIs rely on the request host. Preferred local tenant URLs:
 http://acme.localhost:8000/api/products/
 http://tenant1.localhost:8000/api/products/
 http://tenant2.localhost:8000/api/products/
+http://acme.lvh.me:3000/dashboard
 ```
 
 If your OS/browser does not resolve `*.localhost`, add hosts entries:

@@ -7,6 +7,7 @@ import type { LoginResponse } from "@/lib/types";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
+  WORKSPACE_COOKIE,
   accessCookieOptions,
   expiredCookieOptions,
   refreshCookieOptions,
@@ -191,5 +192,6 @@ export function clearAuthResponse() {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(ACCESS_COOKIE, "", expiredCookieOptions);
   response.cookies.set(REFRESH_COOKIE, "", expiredCookieOptions);
+  response.cookies.set(WORKSPACE_COOKIE, "", expiredCookieOptions);
   return response;
 }

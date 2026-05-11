@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { WORKSPACE_COOKIE } from "@/lib/server/cookies";
 import { proxyToDjango } from "@/lib/server/django";
+import { getTenantSubdomainFromHost } from "@/lib/tenant-host";
 
 export const runtime = "nodejs";
 
@@ -16,7 +17,9 @@ function djangoPath(parts: string[]) {
 
 async function tenantProxy(request: Request, parts: string[]) {
   const cookieStore = await cookies();
-  const tenantSubdomain = cookieStore.get(WORKSPACE_COOKIE)?.value;
+  const tenantSubdomain =
+    getTenantSubdomainFromHost(request.headers.get("host")) ||
+    cookieStore.get(WORKSPACE_COOKIE)?.value;
   if (!tenantSubdomain) {
     return NextResponse.json(
       {
