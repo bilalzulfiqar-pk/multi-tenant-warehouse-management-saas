@@ -62,13 +62,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       typeof window !== "undefined" &&
       window.localStorage.getItem("wms_sidebar_collapsed") === "true",
   );
-  const [currentHost] = useState(() =>
-    typeof window !== "undefined" ? window.location.host : "",
-  );
   const [workspaceTransition, setWorkspaceTransition] = useState<Pick<
     Workspace,
     "name" | "subdomain"
   > | null>(null);
+  const currentHost = typeof window !== "undefined" ? window.location.host : "";
   const switchingBetweenTenants =
     typeof window !== "undefined" &&
     window.sessionStorage.getItem("wms_workspace_switching") === "true";
@@ -110,6 +108,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [session?.user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    function syncSessionAfterHistoryNavigation() {
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.refetchQueries({ queryKey: ["session"] });
+    }
+
+    window.addEventListener("popstate", syncSessionAfterHistoryNavigation);
+    window.addEventListener("pageshow", syncSessionAfterHistoryNavigation);
+    return () => {
+      window.removeEventListener("popstate", syncSessionAfterHistoryNavigation);
+      window.removeEventListener("pageshow", syncSessionAfterHistoryNavigation);
+    };
+  }, [queryClient]);
+
   function toggleSidebar() {
     setSidebarCollapsed((current) => {
       const next = !current;
@@ -146,8 +162,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (sessionQuery.isLoading || !session) {
+  if (sessionQuery.isLoading) {
     return switchingBetweenTenants ? <TenantSwitchBlankScreen /> : <WorkspaceLoadingScreen />;
+  }
+
+  if (sessionQuery.isError || !session) {
+    return (
+      <WorkspaceLoadErrorScreen
+        message={
+          sessionQuery.error instanceof Error
+            ? sessionQuery.error.message
+            : "The session could not be loaded."
+        }
+        onRetry={() => sessionQuery.refetch()}
+      />
+    );
   }
 
   if (!session.user) {
@@ -355,6 +384,42 @@ function WorkspaceLoadingScreen() {
             <p className="mt-1 text-sm text-slate-500">
               Preparing tenant context and permissions.
             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceLoadErrorScreen({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <div className="motion-page w-full max-w-sm rounded-lg border bg-white p-5 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-700">
+            <Loader2 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-950">Could not load workspace</p>
+            <p className="mt-1 text-sm text-slate-500">{message}</p>
+            <div className="mt-4 flex gap-2">
+              <Button onClick={onRetry} size="sm">
+                Retry
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                size="sm"
+                variant="outline"
+              >
+                Reload page
+              </Button>
+            </div>
           </div>
         </div>
       </div>
