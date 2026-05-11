@@ -12,7 +12,7 @@ export function TabsList({
 }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn("inline-flex rounded-md border bg-white p-1", className)}
+      className={cn("inline-flex gap-1 rounded-md border bg-white p-1", className)}
       {...props}
     />
   );

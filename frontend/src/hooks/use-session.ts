@@ -32,14 +32,14 @@ export function useWorkspaceSwitcher() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (workspace: Workspace) =>
-      apiRequest<{ ok: boolean }>("/api/session/workspace", {
+      apiRequest<{ ok: boolean; redirect_url?: string }>("/api/session/workspace", {
         method: "POST",
         body: jsonBody({ subdomain: workspace.subdomain }),
       }),
-    onSuccess: async (_data, workspace) => {
+    onSuccess: async (data, workspace) => {
       await queryClient.invalidateQueries({ queryKey: ["session"] });
       await queryClient.invalidateQueries({ queryKey: ["tenant"] });
-      window.location.assign(buildTenantUrl(workspace.subdomain, window.location.href));
+      window.location.assign(data.redirect_url || buildTenantUrl(workspace.subdomain, window.location.href));
     },
   });
 }
