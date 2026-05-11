@@ -108,6 +108,31 @@ export function buildTenantUrl(subdomain: string, currentUrl: string, path = "/d
   return url.toString();
 }
 
+export function buildBaseUrl(currentUrl: string, path = "/workspaces") {
+  const url = new URL(currentUrl);
+  const { hostname, port } = parseHost(url.host);
+  const localSuffix = localSuffixFor(hostname);
+  const baseDomain = frontendBaseDomain();
+
+  if (baseDomain && (localSuffix || hostname === baseDomain || hostname.endsWith(`.${baseDomain}`))) {
+    url.host = hostWithPort(baseDomain, port);
+  } else if (localSuffix) {
+    url.host = hostWithPort(localSuffix, port);
+  } else {
+    const labels = hostname.split(".");
+    const rootDomain =
+      labels.length >= 3 && labels[0] !== "www"
+        ? labels.slice(1).join(".")
+        : hostname.replace(/^www\./, "");
+    url.host = hostWithPort(rootDomain, port);
+  }
+
+  url.pathname = path;
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 export function canonicalFrontendUrl(currentUrl: string) {
   const baseDomain = frontendBaseDomain();
   if (!baseDomain) {

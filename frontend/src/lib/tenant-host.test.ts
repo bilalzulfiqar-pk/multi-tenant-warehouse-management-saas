@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  buildBaseUrl,
   buildTenantHost,
   buildTenantUrl,
   canonicalFrontendUrl,
@@ -53,5 +54,30 @@ describe("tenant host helpers", () => {
       "http://lvh.me:3000/login",
     );
     expect(canonicalFrontendUrl("http://pakmart.lvh.me:3000/login")).toBeNull();
+  });
+
+  it("builds root workspace URLs from tenant URLs", () => {
+    process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN = "lvh.me";
+
+    expect(buildBaseUrl("http://karachifoods.lvh.me:3000/dashboard")).toBe(
+      "http://lvh.me:3000/workspaces",
+    );
+    expect(buildBaseUrl("http://karachifoods.lvh.me:3000/dashboard", "/login")).toBe(
+      "http://lvh.me:3000/login",
+    );
+  });
+
+  it("builds root workspace URLs for production tenant domains", () => {
+    expect(buildBaseUrl("https://karachifoods.example.com/dashboard")).toBe(
+      "https://example.com/workspaces",
+    );
+  });
+
+  it("uses configured production base domains for root URLs", () => {
+    process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN = "app.example.com";
+
+    expect(buildBaseUrl("https://karachifoods.app.example.com/dashboard")).toBe(
+      "https://app.example.com/workspaces",
+    );
   });
 });

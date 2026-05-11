@@ -5,21 +5,34 @@ import { toast } from "sonner";
 
 import { jsonBody, tenantApi } from "@/lib/api-client";
 import type { Paginated } from "@/lib/types";
+import { useSession } from "@/hooks/use-session";
+
+function useTenantScope() {
+  const session = useSession();
+  return {
+    enabled: Boolean(session.data?.user && session.data?.workspace),
+    key: [session.data?.user?.id || "anonymous", session.data?.workspace?.subdomain || "none"],
+  };
+}
 
 export function useTenantList<T>(
   key: string,
   path: string,
   query?: Record<string, string | number | boolean | null | undefined>,
 ) {
+  const scope = useTenantScope();
   return useQuery({
-    queryKey: ["tenant", key, query],
+    queryKey: ["tenant", ...scope.key, key, query],
+    enabled: scope.enabled,
     queryFn: () => tenantApi<Paginated<T>>(path, { query }),
   });
 }
 
 export function useTenantArray<T>(key: string, path: string) {
+  const scope = useTenantScope();
   return useQuery({
-    queryKey: ["tenant", key, "all"],
+    queryKey: ["tenant", ...scope.key, key, "all"],
+    enabled: scope.enabled,
     queryFn: async () => {
       const page = await tenantApi<Paginated<T>>(path, {
         query: { page_size: 100 },

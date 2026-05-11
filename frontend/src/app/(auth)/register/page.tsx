@@ -1,7 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest, jsonBody } from "@/lib/api-client";
+import { buildBaseUrl } from "@/lib/tenant-host";
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -28,8 +29,9 @@ export default function RegisterPage() {
           password: form.get("password"),
         }),
       });
+      queryClient.clear();
       toast.success("Account created");
-      router.replace("/workspaces");
+      window.location.assign(buildBaseUrl(window.location.href, "/workspaces"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed");
     } finally {

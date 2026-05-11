@@ -48,23 +48,27 @@ function StatCard({
 export default function DashboardPage() {
   const session = useSession();
   const hasWorkspace = Boolean(session.data?.workspace);
+  const tenantScope = [
+    session.data?.user?.id || "anonymous",
+    session.data?.workspace?.subdomain || "none",
+  ];
   const summary = useQuery({
-    queryKey: ["tenant", "dashboard-summary"],
+    queryKey: ["tenant", ...tenantScope, "dashboard-summary"],
     enabled: hasWorkspace,
     queryFn: () => tenantApi<DashboardSummary>("dashboard/summary"),
   });
   const lowStock = useQuery({
-    queryKey: ["tenant", "dashboard-low-stock"],
+    queryKey: ["tenant", ...tenantScope, "dashboard-low-stock"],
     enabled: hasWorkspace,
     queryFn: () => tenantApi<LowStockProduct[]>("dashboard/low-stock"),
   });
   const byWarehouse = useQuery({
-    queryKey: ["tenant", "dashboard-by-warehouse"],
+    queryKey: ["tenant", ...tenantScope, "dashboard-by-warehouse"],
     enabled: hasWorkspace,
     queryFn: () => tenantApi<InventoryByWarehouse[]>("dashboard/inventory-by-warehouse"),
   });
   const recent = useQuery({
-    queryKey: ["tenant", "dashboard-recent"],
+    queryKey: ["tenant", ...tenantScope, "dashboard-recent"],
     enabled: hasWorkspace,
     queryFn: () => tenantApi<StockMovement[]>("dashboard/recent-movements"),
   });

@@ -60,11 +60,18 @@ export default function InventoryActionsPage() {
 }
 
 function useInventoryOptions() {
+  const { data: session } = useSession();
+  const tenantScope = [
+    session?.user?.id || "anonymous",
+    session?.workspace?.subdomain || "none",
+  ];
+  const hasWorkspace = Boolean(session?.user && session?.workspace);
   const products = useTenantArray<Product>("product-options", "products");
   const warehouses = useTenantArray<Warehouse>("warehouse-options", "warehouses");
   const locations = useTenantArray<WarehouseLocation>("location-options", "locations");
   const stockLevels = useQuery({
-    queryKey: ["tenant", "stock-levels", "all"],
+    queryKey: ["tenant", ...tenantScope, "stock-levels", "all"],
+    enabled: hasWorkspace,
     queryFn: async () => {
       const page = await tenantApi<Paginated<StockLevel>>("stock-levels", {
         query: { page_size: 100 },

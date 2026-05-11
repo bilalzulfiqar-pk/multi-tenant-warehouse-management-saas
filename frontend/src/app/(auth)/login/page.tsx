@@ -1,7 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest, jsonBody } from "@/lib/api-client";
+import { buildBaseUrl, buildTenantUrl } from "@/lib/tenant-host";
+import type { Session } from "@/lib/types";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -27,8 +29,16 @@ export default function LoginPage() {
           password: form.get("password"),
         }),
       });
+      queryClient.clear();
+      const session = await apiRequest<Session>("/api/session");
+      const workspace =
+        session.workspace || (session.workspaces.length === 1 ? session.workspaces[0] : null);
       toast.success("Welcome back");
-      router.replace("/dashboard");
+      window.location.assign(
+        workspace
+          ? buildTenantUrl(workspace.subdomain, window.location.href, "/dashboard")
+          : buildBaseUrl(window.location.href, "/workspaces"),
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {

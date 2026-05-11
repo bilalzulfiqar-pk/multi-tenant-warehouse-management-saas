@@ -17,7 +17,8 @@ import {
   Warehouse,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,7 +28,12 @@ import { NativeSelect } from "@/components/ui/select";
 import { useRequireSession, useWorkspaceSwitcher } from "@/hooks/use-session";
 import { apiRequest } from "@/lib/api-client";
 import { canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
-import { buildTenantHost, buildTenantUrl, getTenantSubdomainFromHost } from "@/lib/tenant-host";
+import {
+  buildBaseUrl,
+  buildTenantHost,
+  buildTenantUrl,
+  getTenantSubdomainFromHost,
+} from "@/lib/tenant-host";
 import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +51,7 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const sessionQuery = useRequireSession();
   const switchWorkspace = useWorkspaceSwitcher();
   const session = sessionQuery.data;
@@ -81,6 +87,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname, session?.workspace]);
 
   useEffect(() => {
+    if (!session?.user || session.workspace) {
+      return;
+    }
+
+    const hostSubdomain = getTenantSubdomainFromHost(window.location.host);
+    if (!hostSubdomain && pathname === "/workspaces") {
+      return;
+    }
+
+    const fallbackWorkspace = session.workspaces.length === 1 ? session.workspaces[0] : null;
+    window.location.replace(
+      fallbackWorkspace
+        ? buildTenantUrl(fallbackWorkspace.subdomain, window.location.href, "/dashboard")
+        : buildBaseUrl(window.location.href, "/workspaces"),
+    );
+  }, [pathname, session?.user, session?.workspace, session?.workspaces]);
+
+  useEffect(() => {
     if (session?.user) {
       window.sessionStorage.removeItem("wms_workspace_switching");
     }
@@ -114,9 +138,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
-    await apiRequest("/api/auth/logout", { method: "POST" });
-    toast.success("Signed out");
-    router.replace("/login");
+    try {
+      await apiRequest("/api/auth/logout", { method: "POST" });
+    } finally {
+      queryClient.clear();
+      window.location.assign(buildBaseUrl(window.location.href, "/login"));
+    }
   }
 
   if (sessionQuery.isLoading || !session) {
@@ -125,6 +152,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!session.user) {
     return null;
+  }
+
+  const hostSubdomain = currentHost ? getTenantSubdomainFromHost(currentHost) : null;
+  const redirectingFromUnavailableTenant =
+    !session.workspace && (Boolean(hostSubdomain) || pathname !== "/workspaces");
+
+  if (redirectingFromUnavailableTenant) {
+    return <WorkspaceLoadingScreen />;
   }
 
   const visibleItems = navItems.filter((item) => {
