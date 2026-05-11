@@ -25,6 +25,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NativeSelect } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useRequireSession, useWorkspaceSwitcher } from "@/hooks/use-session";
 import { apiRequest } from "@/lib/api-client";
 import { canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
@@ -293,7 +299,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="truncate text-sm font-semibold text-slate-950">
                   {session.workspace?.name || "No workspace selected"}
                 </p>
-                {role ? <Badge variant="navy">{ROLE_LABELS[role]}</Badge> : null}
+                {role ? (
+                  <span className="inline-flex items-start gap-0.5">
+                    <Badge variant="navy">{ROLE_LABELS[role]}</Badge>
+                    {help ? (
+                      <TooltipProvider delayDuration={120} disableHoverableContent>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              aria-label="Role permissions"
+                              className="mt-[-1px] inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+                              type="button"
+                            >
+                              <span className="-mt-px font-serif text-[11px] font-semibold italic leading-none">
+                                i
+                              </span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" align="center">
+                            {help}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : null}
+                  </span>
+                ) : null}
               </div>
               <p className="text-xs text-slate-500">
                 {session.workspace
@@ -333,11 +363,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Button>
             </div>
           </div>
-          {help ? (
-            <div className="border-t bg-amber-50 px-4 py-2 text-sm text-amber-800 lg:px-6">
-              {help}
-            </div>
-          ) : null}
           <nav className="flex gap-2 overflow-x-auto border-t px-4 py-2 lg:hidden">
             {visibleItems.map((item) => {
               const Icon = item.icon;
