@@ -19,23 +19,27 @@ export function DialogContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-40 bg-slate-950/40" />
       <DialogPrimitive.Content
-        className={cn(
-          "dialog-content fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto rounded-lg border bg-white p-5 shadow-xl",
-          className,
-        )}
+        className="dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 outline-none"
         {...props}
       >
-        {children}
-        <DialogPrimitive.Close asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-3 top-3"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogPrimitive.Close>
+        <div
+          className={cn(
+            "dialog-panel relative max-h-[92vh] overflow-y-auto rounded-lg border bg-white p-5 shadow-xl",
+            className,
+          )}
+        >
+          {children}
+          <DialogPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-3 top-3"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogPrimitive.Close>
+        </div>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );

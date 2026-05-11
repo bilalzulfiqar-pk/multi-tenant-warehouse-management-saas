@@ -105,22 +105,22 @@ textarea {
 @keyframes dialog-show {
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.98);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
 @keyframes dialog-hide {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.98);
+    transform: scale(0.98);
   }
 }
 
@@ -188,16 +188,19 @@ textarea {
   animation-name: overlay-hide;
 }
 
-.dialog-content {
+.dialog-panel {
+  transform-origin: center;
   animation-duration: 180ms;
+  animation-fill-mode: both;
   animation-timing-function: ease-out;
+  will-change: opacity, transform;
 }
 
-.dialog-content[data-state="open"] {
+.dialog-content[data-state="open"] .dialog-panel {
   animation-name: dialog-show;
 }
 
-.dialog-content[data-state="closed"] {
+.dialog-content[data-state="closed"] .dialog-panel {
   animation-name: dialog-hide;
 }
 
