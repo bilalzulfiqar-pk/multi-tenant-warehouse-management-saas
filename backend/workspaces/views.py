@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import F
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -39,8 +40,12 @@ class WorkspaceCreateView(generics.GenericAPIView):
 class WorkspaceListView(generics.ListAPIView):
     serializer_class = WorkspaceListSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Workspace.objects.none()
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Workspace.objects.none()
+
         return (
             Workspace.objects.filter(
                 memberships__user=self.request.user,
@@ -54,11 +59,13 @@ class WorkspaceListView(generics.ListAPIView):
 class CurrentWorkspaceView(APIView):
     permission_classes = [permissions.IsAuthenticated, HasWorkspace, IsWorkspaceMember]
 
+    @extend_schema(responses=CurrentWorkspaceSerializer)
     def get(self, request):
         workspace = request.workspace
         workspace.current_user_role = request.workspace_membership.role
         return Response(CurrentWorkspaceSerializer(workspace).data)
 
+    @extend_schema(request=CurrentWorkspaceSerializer, responses=CurrentWorkspaceSerializer)
     def patch(self, request):
         IsWorkspaceOwner().has_permission(request, self)
         tracked_fields = ("name", "default_timezone", "low_stock_dashboard_enabled")
@@ -95,8 +102,12 @@ class CurrentWorkspaceView(APIView):
 class WorkspaceMemberViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = WorkspaceMembershipSerializer
     permission_classes = [permissions.IsAuthenticated, HasWorkspace, CanManageMembers]
+    queryset = WorkspaceMembership.objects.none()
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return WorkspaceMembership.objects.none()
+
         return (
             WorkspaceMembership.objects.filter(workspace=self.request.workspace)
             .select_related("user", "invited_by", "workspace")
@@ -125,6 +136,7 @@ class WorkspaceMemberViewSet(viewsets.ReadOnlyModelViewSet):
 
 class WorkspaceInviteViewSet(viewsets.ModelViewSet):
     serializer_class = WorkspaceInviteSerializer
+    queryset = WorkspaceInvite.objects.none()
     http_method_names = ["get", "post", "head", "options"]
 
     def get_permissions(self):
@@ -133,6 +145,9 @@ class WorkspaceInviteViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated(), HasWorkspace(), CanManageMembers()]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return WorkspaceInvite.objects.none()
+
         return (
             WorkspaceInvite.objects.filter(workspace=self.request.workspace)
             .select_related("invited_by", "accepted_by", "workspace")

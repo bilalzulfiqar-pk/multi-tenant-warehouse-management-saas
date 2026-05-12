@@ -1,3 +1,4 @@
+from drf_spectacular.utils import OpenApiTypes, extend_schema_field
 from rest_framework import serializers
 
 from .models import (
@@ -62,6 +63,12 @@ class CurrentWorkspaceSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "slug", "subdomain", "status", "role")
 
 
+class UserReferenceSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    email = serializers.EmailField()
+    full_name = serializers.CharField()
+
+
 class WorkspaceMembershipSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     invited_by = serializers.SerializerMethodField()
@@ -87,6 +94,7 @@ class WorkspaceMembershipSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
+    @extend_schema_field(UserReferenceSerializer)
     def get_user(self, obj):
         return {
             "id": str(obj.user_id),
@@ -94,6 +102,7 @@ class WorkspaceMembershipSerializer(serializers.ModelSerializer):
             "full_name": obj.user.full_name,
         }
 
+    @extend_schema_field(UserReferenceSerializer(allow_null=True))
     def get_invited_by(self, obj):
         if obj.invited_by_id is None:
             return None
@@ -146,6 +155,7 @@ class WorkspaceInviteSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_invite_link(self, obj):
         request = self.context.get("request")
         path = f"/api/invites/accept/?token={obj.token}"
@@ -153,6 +163,7 @@ class WorkspaceInviteSerializer(serializers.ModelSerializer):
             return path
         return request.build_absolute_uri(path)
 
+    @extend_schema_field(UserReferenceSerializer)
     def get_invited_by(self, obj):
         return {
             "id": str(obj.invited_by_id),
@@ -160,6 +171,7 @@ class WorkspaceInviteSerializer(serializers.ModelSerializer):
             "full_name": obj.invited_by.full_name,
         }
 
+    @extend_schema_field(UserReferenceSerializer(allow_null=True))
     def get_accepted_by(self, obj):
         if obj.accepted_by_id is None:
             return None

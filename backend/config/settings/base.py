@@ -118,6 +118,12 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Backend-first Django REST API for the warehouse management SaaS MVP.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "InviteStatusEnum": "workspaces.models.InviteStatus.choices",
+        "MembershipStatusEnum": "workspaces.models.MembershipStatus.choices",
+        "WarehouseStatusEnum": "warehouse.models.WarehouseStatus.choices",
+        "WorkspaceStatusEnum": "workspaces.models.WorkspaceStatus.choices",
+    },
 }
 
 REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")

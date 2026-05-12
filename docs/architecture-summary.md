@@ -140,4 +140,4 @@ Rollback scenarios covered by tests include insufficient stock, failed transfer,
 
 ## MVP Boundary
 
-The implemented MVP stays backend-first and avoids billing, Stripe, AI, frontend UI, receiving/dispatch workflows, email notifications, PDF reports, and CSV import/export.
+The implemented MVP stayed backend-first and avoided relying on frontend UI for core validation. A Next.js dashboard has since been added as a portfolio-facing client, while the product still excludes billing, Stripe, AI, receiving/dispatch workflows, email notifications, PDF reports, and CSV import/export.

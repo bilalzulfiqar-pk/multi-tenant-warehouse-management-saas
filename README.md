@@ -119,6 +119,45 @@ npm install
 npm run dev
 ```
 
+## Demo Data
+
+For a portfolio walkthrough, seed Pakistan-region demo data after migrations:
+
+```powershell
+docker compose run --rm backend python manage.py seed_pakistan_demo
+```
+
+The command creates demo users, workspaces, warehouses, locations, catalog items, opening stock, stock movements, audit logs, and pending invites. It is safe to run again; existing stock seed movements are not duplicated.
+
+All demo users use this password:
+
+```text
+PakistanDemo123!
+```
+
+Main demo users:
+
+| Email | Role |
+|---|---|
+| `owner@pakdemo.example.com` | Owner |
+| `admin@pakdemo.example.com` | Admin |
+| `manager@pakdemo.example.com` | Manager |
+| `staff@pakdemo.example.com` | Staff |
+| `viewer@pakdemo.example.com` | Viewer |
+| `nadia@pakdemo.example.com` | Limited multi-workspace user |
+
+The main demo users can access `pakmart`, `punjabtraders`, and `indussupplies`. Nadia can access `pakmart` and `karachifoods`, which is useful for testing the workspace switcher with a different account.
+
+Useful frontend URLs after seeding:
+
+```text
+http://lvh.me:3000/login
+http://pakmart.lvh.me:3000/dashboard
+http://punjabtraders.lvh.me:3000/dashboard
+http://indussupplies.lvh.me:3000/dashboard
+http://karachifoods.lvh.me:3000/dashboard
+```
+
 Run Django checks:
 
 ```powershell

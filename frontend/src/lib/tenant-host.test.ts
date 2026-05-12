@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   buildBaseUrl,
@@ -9,13 +9,35 @@ import {
 } from "@/lib/tenant-host";
 
 describe("tenant host helpers", () => {
-  const originalBaseDomain = process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN;
+  const originalEnv = {
+    nextPublicFrontendBaseDomain: process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN,
+    frontendBaseDomain: process.env.FRONTEND_BASE_DOMAIN,
+    frontendCookieDomain: process.env.FRONTEND_COOKIE_DOMAIN,
+  };
+
+  beforeEach(() => {
+    delete process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN;
+    delete process.env.FRONTEND_BASE_DOMAIN;
+    delete process.env.FRONTEND_COOKIE_DOMAIN;
+  });
 
   afterEach(() => {
-    if (originalBaseDomain === undefined) {
+    if (originalEnv.nextPublicFrontendBaseDomain === undefined) {
       delete process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN;
     } else {
-      process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN = originalBaseDomain;
+      process.env.NEXT_PUBLIC_FRONTEND_BASE_DOMAIN = originalEnv.nextPublicFrontendBaseDomain;
+    }
+
+    if (originalEnv.frontendBaseDomain === undefined) {
+      delete process.env.FRONTEND_BASE_DOMAIN;
+    } else {
+      process.env.FRONTEND_BASE_DOMAIN = originalEnv.frontendBaseDomain;
+    }
+
+    if (originalEnv.frontendCookieDomain === undefined) {
+      delete process.env.FRONTEND_COOKIE_DOMAIN;
+    } else {
+      process.env.FRONTEND_COOKIE_DOMAIN = originalEnv.frontendCookieDomain;
     }
   });
 

@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +19,7 @@ class DashboardBaseView(APIView):
 
 
 class DashboardSummaryView(DashboardBaseView):
+    @extend_schema(responses=DashboardSummarySerializer)
     def get(self, request):
         serializer = DashboardSummarySerializer(
             DashboardSelectors.summary(request.workspace)
@@ -26,6 +28,7 @@ class DashboardSummaryView(DashboardBaseView):
 
 
 class LowStockProductsView(DashboardBaseView):
+    @extend_schema(responses=LowStockProductSerializer(many=True))
     def get(self, request):
         serializer = LowStockProductSerializer(
             DashboardSelectors.low_stock_products(request.workspace),
@@ -35,6 +38,7 @@ class LowStockProductsView(DashboardBaseView):
 
 
 class InventoryByWarehouseView(DashboardBaseView):
+    @extend_schema(responses=InventoryByWarehouseSerializer(many=True))
     def get(self, request):
         serializer = InventoryByWarehouseSerializer(
             DashboardSelectors.inventory_by_warehouse(request.workspace),
@@ -44,6 +48,7 @@ class InventoryByWarehouseView(DashboardBaseView):
 
 
 class RecentMovementsView(DashboardBaseView):
+    @extend_schema(responses=RecentMovementsSerializer(many=True))
     def get(self, request):
         serializer = RecentMovementsSerializer(
             DashboardSelectors.recent_movements(request.workspace),
