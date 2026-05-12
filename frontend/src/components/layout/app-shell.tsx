@@ -293,11 +293,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             variant="ghost"
           >
             {sidebarCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4" />
+              <PanelLeftOpen className="h-4 w-4 shrink-0" />
             ) : (
               <>
-                <PanelLeftClose className="h-4 w-4" />
-                <span className="overflow-hidden whitespace-nowrap transition-[max-width,opacity,transform] delay-100 duration-150 ease-out">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                  <PanelLeftClose className="h-4 w-4 shrink-0" />
+                </span>
+                <span className="min-w-0 overflow-hidden whitespace-nowrap transition-[max-width,opacity,transform] delay-100 duration-150 ease-out">
                   Collapse
                 </span>
               </>
