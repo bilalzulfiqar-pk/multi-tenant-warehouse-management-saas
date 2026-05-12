@@ -288,8 +288,10 @@ test("staff and viewer invite flows keep role-aware inventory UI tight", async (
 
   await logout(page);
   await acceptInviteAsNewUser(page, viewerEmail, "Viewer User", viewerToken);
+  await expect(page.getByRole("link", { name: "Inventory Actions" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Team" })).toHaveCount(0);
   await page.goto(`${new URL(page.url()).origin}/inventory-actions`);
-  await expect(page.getByText("Viewer access")).toBeVisible();
+  await expect(page.getByText("Inventory actions are not available for Viewer access")).toBeVisible();
   await expect(page.getByRole("tab")).toHaveCount(0);
 
   await page.goto(`${new URL(page.url()).origin}/products`);

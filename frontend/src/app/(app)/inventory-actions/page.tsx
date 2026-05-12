@@ -7,6 +7,7 @@ import { Suspense, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Field } from "@/components/domain/field";
+import { EmptyState } from "@/components/layout/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ function InventoryActionsPageContent() {
   const activeMode = availableModes.some((item) => item.value === mode)
     ? mode
     : availableModes[0]?.value;
+  const isViewer = role === "viewer";
 
   return (
     <div>
@@ -62,10 +64,11 @@ function InventoryActionsPageContent() {
         title="Inventory Actions"
         description="Perform transaction-safe stock operations. Stock levels and movement history are created by these workflows."
       />
-      {role === "viewer" ? (
-        <Alert variant="warning" className="mb-4">
-          You have Viewer access. Inventory action forms are hidden for this role.
-        </Alert>
+      {isViewer ? (
+        <EmptyState
+          title="Inventory actions are not available for Viewer access"
+          description="Viewer can review stock levels and movement history, but cannot perform stock operations."
+        />
       ) : null}
       {!activeMode ? null : (
       <Tabs value={activeMode} onValueChange={(value) => setMode(value as Mode)}>

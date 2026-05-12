@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useRequireSession, useWorkspaceSwitcher } from "@/hooks/use-session";
 import { apiRequest } from "@/lib/api-client";
-import { canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
+import { canManageMembers, canStockInOut, canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
 import {
   buildBaseUrl,
   buildTenantHost,
@@ -206,6 +206,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const visibleItems = navItems.filter((item) => {
     if (item.href === "/audit-logs") {
       return canViewAuditLogs(role);
+    }
+    if (item.href === "/team") {
+      return canManageMembers(role);
+    }
+    if (item.href === "/inventory-actions") {
+      return canStockInOut(role);
     }
     return true;
   });

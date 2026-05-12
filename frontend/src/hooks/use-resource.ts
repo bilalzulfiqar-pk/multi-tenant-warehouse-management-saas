@@ -28,11 +28,11 @@ export function useTenantList<T>(
   });
 }
 
-export function useTenantArray<T>(key: string, path: string) {
+export function useTenantArray<T>(key: string, path: string, enabled = true) {
   const scope = useTenantScope();
   return useQuery({
     queryKey: ["tenant", ...scope.key, key, "all"],
-    enabled: scope.enabled,
+    enabled: scope.enabled && enabled,
     queryFn: async () => {
       const page = await tenantApi<Paginated<T>>(path, {
         query: { page_size: 100 },

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/hooks/use-session";
 import { tenantApi } from "@/lib/api-client";
+import { canManageSetup, canStockInOut } from "@/lib/permissions";
 import type {
   DashboardSummary,
   InventoryByWarehouse,
@@ -75,6 +76,9 @@ export default function DashboardPage() {
   });
   const dashboardLoading =
     summary.isLoading || lowStock.isLoading || byWarehouse.isLoading || recent.isLoading;
+  const role = session.data?.workspace?.role;
+  const setupAllowed = canManageSetup(role);
+  const inventoryAllowed = canStockInOut(role);
 
   if (!hasWorkspace) {
     return (
@@ -91,17 +95,25 @@ export default function DashboardPage() {
         title="Dashboard"
         description="Tenant-scoped operating snapshot for inventory and warehouse health."
         actions={
-          <>
-            <Button asChild variant="outline">
-              <Link href="/products">+ Product</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/warehouses">+ Warehouse</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/inventory-actions">Inventory Actions</Link>
-            </Button>
-          </>
+          setupAllowed || inventoryAllowed ? (
+            <>
+              {setupAllowed ? (
+                <>
+                  <Button asChild variant="outline">
+                    <Link href="/products">+ Product</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/warehouses">+ Warehouse</Link>
+                  </Button>
+                </>
+              ) : null}
+              {inventoryAllowed ? (
+                <Button asChild>
+                  <Link href="/inventory-actions">Inventory Actions</Link>
+                </Button>
+              ) : null}
+            </>
+          ) : null
         }
       />
 

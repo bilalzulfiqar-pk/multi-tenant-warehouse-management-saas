@@ -9,9 +9,9 @@ import { ConfirmAction } from "@/components/domain/confirm-action";
 import { RoleBadge, StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
 import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
+import { EmptyState } from "@/components/layout/empty-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,8 +30,8 @@ export default function TeamPage() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const canManage = canManageMembers(session?.workspace?.role);
-  const members = useTenantArray<Membership>("members", "members");
-  const invites = useTenantArray<Invite>("invites", "invites");
+  const members = useTenantArray<Membership>("members", "members", canManage);
+  const invites = useTenantArray<Invite>("invites", "invites", canManage);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [memberEdit, setMemberEdit] = useState<Membership | null>(null);
 
@@ -101,6 +101,21 @@ export default function TeamPage() {
     return url.toString();
   }
 
+  if (!canManage) {
+    return (
+      <div>
+        <PageHeader
+          title="Team"
+          description="Manage workspace members and manual invite links."
+        />
+        <EmptyState
+          title="Team management is not available for this role"
+          description="Owners and Admins can manage members and invite links. Your other permitted workspace pages remain available."
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -108,11 +123,6 @@ export default function TeamPage() {
         description="Manage workspace members and manual invite links."
         actions={canManage ? <Button onClick={() => setInviteOpen(true)}>+ Invite member</Button> : null}
       />
-      {!canManage ? (
-        <Alert variant="warning" className="mb-4">
-          Team management is available to Owners and Admins only.
-        </Alert>
-      ) : null}
 
       <Tabs defaultValue="members">
         <TabsList>
