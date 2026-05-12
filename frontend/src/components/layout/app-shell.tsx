@@ -56,7 +56,7 @@ const navItems = [
 ];
 
 const sidebarLabelTransition =
-  "min-w-0 overflow-hidden whitespace-nowrap transition-[opacity,transform] duration-150 ease-out";
+  "min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-150 ease-out";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -239,8 +239,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 sidebarLabelTransition,
                 sidebarCollapsed
-                  ? "pointer-events-none -translate-x-1 opacity-0"
-                  : "translate-x-0 opacity-100 delay-150",
+                  ? "pointer-events-none opacity-0"
+                  : "opacity-100 delay-150",
               )}
             >
               <p className="text-sm font-semibold">Multi-Tenant WMS</p>
@@ -270,8 +270,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     sidebarLabelTransition,
                     "truncate",
                     sidebarCollapsed
-                      ? "pointer-events-none -translate-x-1 opacity-0"
-                      : "translate-x-0 opacity-100 delay-150",
+                      ? "pointer-events-none opacity-0"
+                      : "opacity-100 delay-150",
                   )}
                 >
                   {item.label}
@@ -304,19 +304,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </Button>
         </div>
-        <div
-          className={cn(
-            "border-t border-white/10 p-4 text-xs text-slate-400",
-            sidebarCollapsed && "px-2 text-center",
-          )}
-        >
-          {sidebarCollapsed ? (
-            <span title="API docs available at /api/docs/">API</span>
-          ) : (
-            <>
-              API docs: <span className="text-slate-200">/api/docs/</span>
-            </>
-          )}
+        <div className="relative h-12 border-t border-white/10 text-xs text-slate-400">
+          <div
+            className={cn(
+              "absolute inset-0 flex items-center px-4 transition-opacity duration-150 ease-out",
+              sidebarCollapsed ? "pointer-events-none opacity-0" : "opacity-100 delay-150",
+            )}
+          >
+            API docs: <span className="ml-1 text-slate-200">/api/docs/</span>
+          </div>
+          <div
+            className={cn(
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-150 ease-out",
+              sidebarCollapsed ? "opacity-100 delay-150" : "pointer-events-none opacity-0",
+            )}
+            title="API docs available at /api/docs/"
+          >
+            API
+          </div>
         </div>
       </aside>
 
