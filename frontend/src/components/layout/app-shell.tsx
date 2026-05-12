@@ -96,6 +96,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     const hostSubdomain = getTenantSubdomainFromHost(window.location.host);
+    if (hostSubdomain && pathname === "/accept-invite") {
+      return;
+    }
+
     if (!hostSubdomain && pathname === "/workspaces") {
       return;
     }
@@ -191,7 +195,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const hostSubdomain = currentHost ? getTenantSubdomainFromHost(currentHost) : null;
   const redirectingFromUnavailableTenant =
-    !session.workspace && (Boolean(hostSubdomain) || pathname !== "/workspaces");
+    !session.workspace &&
+    pathname !== "/accept-invite" &&
+    (Boolean(hostSubdomain) || pathname !== "/workspaces");
 
   if (redirectingFromUnavailableTenant) {
     return <WorkspaceLoadingScreen />;

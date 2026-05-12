@@ -21,7 +21,11 @@ export function useRequireSession() {
 
   useEffect(() => {
     if (!query.isLoading && query.data && !query.data.user) {
-      router.replace("/login");
+      const next =
+        typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}`
+          : "/";
+      router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
   }, [query.data, query.isLoading, router]);
 

@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRightLeft, ClipboardCheck, Minus, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Field } from "@/components/domain/field";
@@ -20,17 +20,41 @@ import { useSession } from "@/hooks/use-session";
 import { useTenantArray } from "@/hooks/use-resource";
 import { jsonBody, tenantApi } from "@/lib/api-client";
 import { canAdjustOrTransfer, canStockInOut } from "@/lib/permissions";
-import type { Paginated, Product, StockLevel, Warehouse, WarehouseLocation } from "@/lib/types";
+import type { Paginated, Product, StockLevel, Warehouse, WarehouseLocation, WorkspaceRole } from "@/lib/types";
 import { formatQuantity } from "@/lib/utils";
 
 type Mode = "stock-in" | "stock-out" | "adjust" | "transfer";
 
+const inventoryModes: {
+  value: Mode;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  allowed: (role?: WorkspaceRole | null) => boolean;
+}[] = [
+  { value: "stock-in", label: "Stock In", icon: Plus, allowed: canStockInOut },
+  { value: "stock-out", label: "Stock Out", icon: Minus, allowed: canStockInOut },
+  { value: "adjust", label: "Adjust", icon: ClipboardCheck, allowed: canAdjustOrTransfer },
+  { value: "transfer", label: "Transfer", icon: ArrowRightLeft, allowed: canAdjustOrTransfer },
+];
+
 export default function InventoryActionsPage() {
+  return (
+    <Suspense fallback={null}>
+      <InventoryActionsPageContent />
+    </Suspense>
+  );
+}
+
+function InventoryActionsPageContent() {
   const params = useSearchParams();
   const initialMode = (params.get("mode") as Mode) || "stock-in";
   const [mode, setMode] = useState<Mode>(initialMode);
   const { data: session } = useSession();
   const role = session?.workspace?.role;
+  const availableModes = inventoryModes.filter((item) => item.allowed(role));
+  const activeMode = availableModes.some((item) => item.value === mode)
+    ? mode
+    : availableModes[0]?.value;
 
   return (
     <div>
@@ -43,18 +67,25 @@ export default function InventoryActionsPage() {
           You have Viewer access. Inventory action forms are hidden for this role.
         </Alert>
       ) : null}
-      <Tabs value={mode} onValueChange={(value) => setMode(value as Mode)}>
+      {!activeMode ? null : (
+      <Tabs value={activeMode} onValueChange={(value) => setMode(value as Mode)}>
         <TabsList>
-          <TabsTrigger value="stock-in" disabled={!canStockInOut(role)}><Plus className="mr-2 inline h-4 w-4" />Stock In</TabsTrigger>
-          <TabsTrigger value="stock-out" disabled={!canStockInOut(role)}><Minus className="mr-2 inline h-4 w-4" />Stock Out</TabsTrigger>
-          <TabsTrigger value="adjust" disabled={!canAdjustOrTransfer(role)}><ClipboardCheck className="mr-2 inline h-4 w-4" />Adjust</TabsTrigger>
-          <TabsTrigger value="transfer" disabled={!canAdjustOrTransfer(role)}><ArrowRightLeft className="mr-2 inline h-4 w-4" />Transfer</TabsTrigger>
+          {availableModes.map((item) => {
+            const Icon = item.icon;
+            return (
+              <TabsTrigger key={item.value} value={item.value}>
+                <Icon className="mr-2 inline h-4 w-4" />
+                {item.label}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
         <TabsContent value="stock-in"><StockInOutForm type="stock-in" /></TabsContent>
         <TabsContent value="stock-out"><StockInOutForm type="stock-out" /></TabsContent>
         <TabsContent value="adjust"><AdjustForm /></TabsContent>
         <TabsContent value="transfer"><TransferForm /></TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }

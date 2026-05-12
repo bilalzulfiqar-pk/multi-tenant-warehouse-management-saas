@@ -14,12 +14,14 @@ import { NativeSelect } from "@/components/ui/select";
 import { useSession } from "@/hooks/use-session";
 import { tenantApi, jsonBody } from "@/lib/api-client";
 import { canEditWorkspaceSettings } from "@/lib/permissions";
+import { buildTenantHost } from "@/lib/tenant-host";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const workspace = session?.workspace;
   const canEdit = canEditWorkspaceSettings(workspace?.role);
+  const currentHost = typeof window !== "undefined" ? window.location.host : "";
   const [saving, setSaving] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -59,7 +61,13 @@ export default function SettingsPage() {
       <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle>{workspace?.name || "Workspace"}</CardTitle>
-          <CardDescription>{workspace?.subdomain}.localhost:8000</CardDescription>
+          <CardDescription>
+            {workspace
+              ? currentHost
+                ? buildTenantHost(workspace.subdomain, currentHost)
+                : workspace.subdomain
+              : "No workspace selected"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4" onSubmit={submit}>

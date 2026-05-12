@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { MovementBadge, StatusBadge } from "@/components/domain/badges";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { EmptyState } from "@/components/layout/empty-state";
 import { StatCardsSkeleton, TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
@@ -153,6 +154,14 @@ export default function DashboardPage() {
                       <TableSkeleton columns={4} />
                     </TableCell>
                   </TableRow>
+                ) : byWarehouse.isError ? (
+                  <TableErrorRow colSpan={4} onRetry={() => byWarehouse.refetch()} />
+                ) : (byWarehouse.data || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={4}
+                    title="No warehouse inventory yet"
+                    description="Stock quantities will appear after inventory operations."
+                  />
                 ) : (byWarehouse.data || []).map((item) => (
                   <TableRow key={item.warehouse}>
                     <TableCell>
@@ -194,6 +203,14 @@ export default function DashboardPage() {
                       <TableSkeleton columns={4} />
                     </TableCell>
                   </TableRow>
+                ) : lowStock.isError ? (
+                  <TableErrorRow colSpan={4} onRetry={() => lowStock.refetch()} />
+                ) : (lowStock.data || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={4}
+                    title="No low stock products"
+                    description="Products below their thresholds will appear here."
+                  />
                 ) : (lowStock.data || []).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium text-slate-950">{item.sku}</TableCell>
@@ -232,6 +249,14 @@ export default function DashboardPage() {
                     <TableSkeleton columns={5} />
                   </TableCell>
                 </TableRow>
+              ) : recent.isError ? (
+                <TableErrorRow colSpan={5} onRetry={() => recent.refetch()} />
+              ) : (recent.data || []).length === 0 ? (
+                <TableEmptyRow
+                  colSpan={5}
+                  title="No recent movements"
+                  description="Stock actions will create movement records here."
+                />
               ) : (recent.data || []).map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>

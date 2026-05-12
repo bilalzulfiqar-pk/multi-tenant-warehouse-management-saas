@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { buildTenantHost } from "@/lib/tenant-host";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -54,5 +56,8 @@ export function titleCase(value: string | null | undefined) {
 }
 
 export function compactUrlHost(subdomain: string) {
-  return `${subdomain}.localhost:8000`;
+  if (typeof window !== "undefined") {
+    return buildTenantHost(subdomain, window.location.host);
+  }
+  return `${subdomain}.lvh.me:3000`;
 }

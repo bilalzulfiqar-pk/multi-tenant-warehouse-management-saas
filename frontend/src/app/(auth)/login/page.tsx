@@ -2,7 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import { AuthCard } from "@/components/auth/auth-card";
@@ -10,11 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest, jsonBody } from "@/lib/api-client";
-import { buildBaseUrl, buildTenantUrl } from "@/lib/tenant-host";
+import { buildBaseUrl, buildTenantUrl, safeNextPath } from "@/lib/tenant-host";
 import type { Session } from "@/lib/types";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const queryClient = useQueryClient();
+  const params = useSearchParams();
+  const next = safeNextPath(params.get("next"));
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -34,6 +45,10 @@ export default function LoginPage() {
       const workspace =
         session.workspace || (session.workspaces.length === 1 ? session.workspaces[0] : null);
       toast.success("Welcome back");
+      if (next) {
+        window.location.assign(next);
+        return;
+      }
       window.location.assign(
         workspace
           ? buildTenantUrl(workspace.subdomain, window.location.href, "/dashboard")
@@ -53,7 +68,10 @@ export default function LoginPage() {
       footer={
         <>
           New to the project?{" "}
-          <Link className="font-medium text-emerald-700 hover:text-emerald-800" href="/register">
+          <Link
+            className="font-medium text-emerald-700 hover:text-emerald-800"
+            href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+          >
             Create an account
           </Link>
         </>

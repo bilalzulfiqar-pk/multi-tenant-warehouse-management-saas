@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -101,6 +102,14 @@ export default function StockLevelsPage() {
                   <TableSkeleton columns={7} />
                 </TableCell>
               </TableRow>
+            ) : stockLevels.isError ? (
+              <TableErrorRow colSpan={7} onRetry={() => stockLevels.refetch()} />
+            ) : (stockLevels.data?.results || []).length === 0 ? (
+              <TableEmptyRow
+                colSpan={7}
+                title="No stock levels found"
+                description="Stock levels appear after inventory operations create quantity."
+              />
             ) : (stockLevels.data?.results || []).map((level) => (
               <TableRow key={level.id}>
                 <TableCell className="font-medium text-slate-950">{level.product_sku}</TableCell>

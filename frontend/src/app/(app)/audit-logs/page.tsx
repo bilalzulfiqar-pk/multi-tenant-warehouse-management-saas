@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -69,6 +70,14 @@ export default function AuditLogsPage() {
                   <TableSkeleton columns={6} />
                 </TableCell>
               </TableRow>
+            ) : logs.isError ? (
+              <TableErrorRow colSpan={6} onRetry={() => logs.refetch()} />
+            ) : (logs.data?.results || []).length === 0 ? (
+              <TableEmptyRow
+                colSpan={6}
+                title="No audit events yet"
+                description="Important workspace, catalog, member, and stock actions will appear here."
+              />
             ) : (logs.data?.results || []).map((log) => (
               <TableRow key={log.id}>
                 <TableCell>{formatDateTime(log.created_at)}</TableCell>

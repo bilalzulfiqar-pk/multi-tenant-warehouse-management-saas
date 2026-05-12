@@ -6,8 +6,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { BooleanBadge } from "@/components/domain/badges";
+import { ConfirmAction } from "@/components/domain/confirm-action";
 import { Field } from "@/components/domain/field";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -186,6 +188,14 @@ export default function ProductsPage() {
                       <TableSkeleton columns={9} />
                     </TableCell>
                   </TableRow>
+                ) : products.isError ? (
+                  <TableErrorRow colSpan={9} onRetry={() => products.refetch()} />
+                ) : (products.data?.results || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={9}
+                    title="No products found"
+                    description="Create a product or adjust the current filters."
+                  />
                 ) : (products.data?.results || []).map((product) => (
                   <TableRow key={product.id}>
                     <TableCell className="font-medium text-slate-950">{product.sku}</TableCell>
@@ -204,13 +214,21 @@ export default function ProductsPage() {
                           <Button variant="ghost" size="icon" onClick={() => setProductForm(product)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggle(`products/${product.id}`, product.is_active)}
+                          <ConfirmAction
+                            title={product.is_active ? "Deactivate product?" : "Reactivate product?"}
+                            description={
+                              product.is_active
+                                ? "This product will be blocked from new stock operations."
+                                : "This product can be used in new stock operations again."
+                            }
+                            confirmLabel={product.is_active ? "Deactivate" : "Reactivate"}
+                            variant={product.is_active ? "danger" : "default"}
+                            onConfirm={() => toggle(`products/${product.id}`, product.is_active)}
                           >
-                            {product.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                          </Button>
+                            <Button variant="ghost" size="icon">
+                              {product.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            </Button>
+                          </ConfirmAction>
                         </div>
                       ) : null}
                     </TableCell>
@@ -226,6 +244,9 @@ export default function ProductsPage() {
           <SimpleTable
             rows={categories.data || []}
             isLoading={categories.isLoading}
+            isError={categories.isError}
+            onRetry={() => categories.refetch()}
+            emptyTitle="No categories found"
             columns={["Name", "Description", "Status"]}
             render={(category) => [
               category.name,
@@ -238,13 +259,17 @@ export default function ProductsPage() {
                   <Button variant="ghost" size="icon" onClick={() => setCategoryForm(category)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggle(`categories/${category.id}`, category.is_active)}
+                  <ConfirmAction
+                    title={category.is_active ? "Deactivate category?" : "Reactivate category?"}
+                    description="This changes whether the category is available for catalog organization."
+                    confirmLabel={category.is_active ? "Deactivate" : "Reactivate"}
+                    variant={category.is_active ? "danger" : "default"}
+                    onConfirm={() => toggle(`categories/${category.id}`, category.is_active)}
                   >
-                    {category.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                  </Button>
+                    <Button variant="ghost" size="icon">
+                      {category.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                    </Button>
+                  </ConfirmAction>
                 </>
               ) : null
             }
@@ -255,6 +280,9 @@ export default function ProductsPage() {
           <SimpleTable
             rows={units.data || []}
             isLoading={units.isLoading}
+            isError={units.isError}
+            onRetry={() => units.refetch()}
+            emptyTitle="No units found"
             columns={["Name", "Abbreviation", "Status"]}
             render={(unit) => [
               unit.name,
@@ -267,13 +295,17 @@ export default function ProductsPage() {
                   <Button variant="ghost" size="icon" onClick={() => setUnitForm(unit)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggle(`units/${unit.id}`, unit.is_active)}
+                  <ConfirmAction
+                    title={unit.is_active ? "Deactivate unit?" : "Reactivate unit?"}
+                    description="This changes whether the unit is available for new products."
+                    confirmLabel={unit.is_active ? "Deactivate" : "Reactivate"}
+                    variant={unit.is_active ? "danger" : "default"}
+                    onConfirm={() => toggle(`units/${unit.id}`, unit.is_active)}
                   >
-                    {unit.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                  </Button>
+                    <Button variant="ghost" size="icon">
+                      {unit.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                    </Button>
+                  </ConfirmAction>
                 </>
               ) : null
             }
@@ -339,12 +371,18 @@ export default function ProductsPage() {
 function SimpleTable<T extends { id: string }>({
   rows,
   isLoading,
+  isError,
+  onRetry,
+  emptyTitle,
   columns,
   render,
   actions,
 }: {
   rows: T[];
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
+  emptyTitle: string;
   columns: string[];
   render: (row: T) => React.ReactNode[];
   actions?: (row: T) => React.ReactNode;
@@ -365,6 +403,14 @@ function SimpleTable<T extends { id: string }>({
                 <TableSkeleton columns={columns.length + 1} />
               </TableCell>
             </TableRow>
+          ) : isError ? (
+            <TableErrorRow colSpan={columns.length + 1} onRetry={onRetry} />
+          ) : rows.length === 0 ? (
+            <TableEmptyRow
+              colSpan={columns.length + 1}
+              title={emptyTitle}
+              description="Create one to start organizing catalog data."
+            />
           ) : rows.map((row) => (
             <TableRow key={row.id}>
               {render(row).map((cell, index) => <TableCell key={index}>{cell}</TableCell>)}

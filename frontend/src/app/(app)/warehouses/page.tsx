@@ -5,9 +5,11 @@ import { Edit, Power, PowerOff } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ConfirmAction } from "@/components/domain/confirm-action";
 import { StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -164,6 +166,14 @@ export default function WarehousesPage() {
                       <TableSkeleton columns={6} />
                     </TableCell>
                   </TableRow>
+                ) : warehouses.isError ? (
+                  <TableErrorRow colSpan={6} onRetry={() => warehouses.refetch()} />
+                ) : (warehouses.data?.results || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={6}
+                    title="No warehouses found"
+                    description="Create a warehouse or adjust the current search."
+                  />
                 ) : (warehouses.data?.results || []).map((warehouse) => (
                   <TableRow key={warehouse.id}>
                     <TableCell className="font-medium text-slate-950">{warehouse.code}</TableCell>
@@ -177,9 +187,21 @@ export default function WarehousesPage() {
                           <Button variant="ghost" size="icon" onClick={() => setWarehouseForm(warehouse)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggle(`warehouses/${warehouse.id}`, warehouse.status)}>
-                            {warehouse.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                          </Button>
+                          <ConfirmAction
+                            title={warehouse.status === "active" ? "Deactivate warehouse?" : "Reactivate warehouse?"}
+                            description={
+                              warehouse.status === "active"
+                                ? "This warehouse will be blocked from new stock operations."
+                                : "This warehouse can be used in new stock operations again."
+                            }
+                            confirmLabel={warehouse.status === "active" ? "Deactivate" : "Reactivate"}
+                            variant={warehouse.status === "active" ? "danger" : "default"}
+                            onConfirm={() => toggle(`warehouses/${warehouse.id}`, warehouse.status)}
+                          >
+                            <Button variant="ghost" size="icon">
+                              {warehouse.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            </Button>
+                          </ConfirmAction>
                         </div>
                       ) : null}
                     </TableCell>
@@ -212,6 +234,14 @@ export default function WarehousesPage() {
                       <TableSkeleton columns={7} />
                     </TableCell>
                   </TableRow>
+                ) : locations.isError ? (
+                  <TableErrorRow colSpan={7} onRetry={() => locations.refetch()} />
+                ) : (locations.data?.results || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={7}
+                    title="No locations found"
+                    description="Create a location or adjust the current search."
+                  />
                 ) : (locations.data?.results || []).map((location) => (
                   <TableRow key={location.id}>
                     <TableCell className="font-medium text-slate-950">{location.code}</TableCell>
@@ -226,9 +256,21 @@ export default function WarehousesPage() {
                           <Button variant="ghost" size="icon" onClick={() => setLocationForm(location)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => toggle(`locations/${location.id}`, location.status)}>
-                            {location.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                          </Button>
+                          <ConfirmAction
+                            title={location.status === "active" ? "Deactivate location?" : "Reactivate location?"}
+                            description={
+                              location.status === "active"
+                                ? "This location will be blocked from new stock operations."
+                                : "This location can be used in new stock operations again."
+                            }
+                            confirmLabel={location.status === "active" ? "Deactivate" : "Reactivate"}
+                            variant={location.status === "active" ? "danger" : "default"}
+                            onConfirm={() => toggle(`locations/${location.id}`, location.status)}
+                          >
+                            <Button variant="ghost" size="icon">
+                              {location.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            </Button>
+                          </ConfirmAction>
                         </div>
                       ) : null}
                     </TableCell>

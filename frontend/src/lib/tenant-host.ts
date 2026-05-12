@@ -133,6 +133,13 @@ export function buildBaseUrl(currentUrl: string, path = "/workspaces") {
   return url.toString();
 }
 
+export function safeNextPath(value: string | null | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/api/")) {
+    return null;
+  }
+  return value;
+}
+
 export function canonicalFrontendUrl(currentUrl: string) {
   const baseDomain = frontendBaseDomain();
   if (!baseDomain) {

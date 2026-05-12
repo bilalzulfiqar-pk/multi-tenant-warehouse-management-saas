@@ -125,7 +125,7 @@ export default function WorkspacesPage() {
                   required
                 />
                 <p className="text-xs text-slate-500">
-                  Preview: {subdomain ? compactUrlHost(subdomain) : "acme.localhost:8000"}
+                  Preview: {compactUrlHost(subdomain || "acme")}
                 </p>
               </div>
               <Button className="w-full" isLoading={loading} loadingText="Creating..." type="submit">

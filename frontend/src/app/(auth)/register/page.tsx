@@ -2,7 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import { AuthCard } from "@/components/auth/auth-card";
@@ -10,10 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest, jsonBody } from "@/lib/api-client";
-import { buildBaseUrl } from "@/lib/tenant-host";
+import { buildBaseUrl, safeNextPath } from "@/lib/tenant-host";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageContent />
+    </Suspense>
+  );
+}
+
+function RegisterPageContent() {
   const queryClient = useQueryClient();
+  const params = useSearchParams();
+  const next = safeNextPath(params.get("next"));
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -31,6 +42,10 @@ export default function RegisterPage() {
       });
       queryClient.clear();
       toast.success("Account created");
+      if (next) {
+        window.location.assign(next);
+        return;
+      }
       window.location.assign(buildBaseUrl(window.location.href, "/workspaces"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed");
@@ -46,7 +61,10 @@ export default function RegisterPage() {
       footer={
         <>
           Already registered?{" "}
-          <Link className="font-medium text-emerald-700 hover:text-emerald-800" href="/login">
+          <Link
+            className="font-medium text-emerald-700 hover:text-emerald-800"
+            href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+          >
             Sign in
           </Link>
         </>

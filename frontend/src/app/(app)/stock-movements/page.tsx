@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { MovementBadge } from "@/components/domain/badges";
 import { PaginationControls } from "@/components/domain/pagination";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,6 +81,14 @@ export default function StockMovementsPage() {
                   <TableSkeleton columns={8} />
                 </TableCell>
               </TableRow>
+            ) : movements.isError ? (
+              <TableErrorRow colSpan={8} onRetry={() => movements.refetch()} />
+            ) : (movements.data?.results || []).length === 0 ? (
+              <TableEmptyRow
+                colSpan={8}
+                title="No stock movements found"
+                description="Inventory operations will appear here as an immutable ledger."
+              />
             ) : (movements.data?.results || []).map((movement) => (
               <TableRow key={movement.id}>
                 <TableCell>{formatDateTime(movement.created_at)}</TableCell>

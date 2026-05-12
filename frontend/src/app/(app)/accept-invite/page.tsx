@@ -1,7 +1,8 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
 import { Field } from "@/components/domain/field";
@@ -13,6 +14,15 @@ import { Input } from "@/components/ui/input";
 import { tenantApi, jsonBody } from "@/lib/api-client";
 
 export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={null}>
+      <AcceptInvitePageContent />
+    </Suspense>
+  );
+}
+
+function AcceptInvitePageContent() {
+  const queryClient = useQueryClient();
   const params = useSearchParams();
   const [token, setToken] = useState(params.get("token") || "");
   const [loading, setLoading] = useState(false);
@@ -25,7 +35,10 @@ export default function AcceptInvitePage() {
         method: "POST",
         body: jsonBody({ token }),
       });
+      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      await queryClient.invalidateQueries({ queryKey: ["tenant"] });
       toast.success("Invite accepted");
+      window.location.assign(new URL("/dashboard", window.location.href).toString());
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invite could not be accepted");
     } finally {
@@ -36,11 +49,11 @@ export default function AcceptInvitePage() {
   return (
     <div>
       <PageHeader
-        title="Accept Invite"
-        description="Accept a manual workspace invite token for the currently selected tenant."
+        title="Accept invite"
+        description="Review and accept this tenant workspace invite."
       />
       <Alert className="mb-4">
-        Select the invited workspace first, then accept the token with an account using the invited email address.
+        Use an account with the invited email address. This invite will add you to the current tenant workspace.
       </Alert>
       <Card className="max-w-2xl">
         <CardHeader>

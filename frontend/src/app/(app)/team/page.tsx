@@ -5,8 +5,10 @@ import { Copy, UserMinus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ConfirmAction } from "@/components/domain/confirm-action";
 import { RoleBadge, StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
+import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -90,6 +92,15 @@ export default function TeamPage() {
     }
   }
 
+  function frontendInviteLink(invite: Invite) {
+    const token = new URL(invite.invite_link, window.location.href).searchParams.get("token");
+    const url = new URL("/accept-invite", window.location.href);
+    if (token) {
+      url.searchParams.set("token", token);
+    }
+    return url.toString();
+  }
+
   return (
     <div>
       <PageHeader
@@ -127,6 +138,14 @@ export default function TeamPage() {
                       <TableSkeleton columns={5} />
                     </TableCell>
                   </TableRow>
+                ) : members.isError ? (
+                  <TableErrorRow colSpan={5} onRetry={() => members.refetch()} />
+                ) : (members.data || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={5}
+                    title="No members found"
+                    description="Accepted members will appear here."
+                  />
                 ) : (members.data || []).map((member) => (
                   <TableRow key={member.id}>
                     <TableCell>
@@ -140,9 +159,16 @@ export default function TeamPage() {
                       {canManage ? (
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="sm" onClick={() => setMemberEdit(member)}>Edit</Button>
-                          <Button variant="ghost" size="icon" onClick={() => disableMember(member)}>
-                            <UserMinus className="h-4 w-4" />
-                          </Button>
+                          <ConfirmAction
+                            title="Disable member?"
+                            description={`${member.user.email} will lose access to this workspace.`}
+                            confirmLabel="Disable"
+                            onConfirm={() => disableMember(member)}
+                          >
+                            <Button variant="ghost" size="icon">
+                              <UserMinus className="h-4 w-4" />
+                            </Button>
+                          </ConfirmAction>
                         </div>
                       ) : null}
                     </TableCell>
@@ -171,6 +197,14 @@ export default function TeamPage() {
                       <TableSkeleton columns={5} />
                     </TableCell>
                   </TableRow>
+                ) : invites.isError ? (
+                  <TableErrorRow colSpan={5} onRetry={() => invites.refetch()} />
+                ) : (invites.data || []).length === 0 ? (
+                  <TableEmptyRow
+                    colSpan={5}
+                    title="No invites found"
+                    description="Pending manual invite links will appear here."
+                  />
                 ) : (invites.data || []).map((invite) => (
                   <TableRow key={invite.id}>
                     <TableCell>{invite.email}</TableCell>
@@ -184,14 +218,21 @@ export default function TeamPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => {
-                              navigator.clipboard.writeText(invite.invite_link);
+                              navigator.clipboard.writeText(frontendInviteLink(invite));
                               toast.success("Invite link copied");
                             }}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
                           {invite.status === "pending" ? (
-                            <Button variant="ghost" size="sm" onClick={() => cancelInvite(invite)}>Cancel</Button>
+                            <ConfirmAction
+                              title="Cancel invite?"
+                              description={`The invite for ${invite.email} will no longer be usable.`}
+                              confirmLabel="Cancel invite"
+                              onConfirm={() => cancelInvite(invite)}
+                            >
+                              <Button variant="ghost" size="sm">Cancel</Button>
+                            </ConfirmAction>
                           ) : null}
                         </div>
                       ) : null}
