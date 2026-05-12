@@ -55,6 +55,9 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
+const sidebarLabelTransition =
+  "min-w-0 overflow-hidden whitespace-nowrap transition-[opacity,transform] duration-150 ease-out";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -221,25 +224,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <WorkspaceTransitionOverlay workspace={workspaceTransition} />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 hidden flex-col bg-slate-950 text-white transition-[width] duration-200 ease-out lg:flex",
+          "fixed inset-y-0 left-0 hidden flex-col overflow-hidden bg-slate-950 text-white transition-[width] duration-300 ease-out lg:flex",
           sidebarCollapsed ? "w-20" : "w-64",
         )}
       >
-        <div
-          className={cn(
-            "flex h-16 items-center gap-3 border-b border-white/10 px-4",
-            sidebarCollapsed && "justify-center",
-          )}
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500 text-slate-950">
-            <Building2 className="h-5 w-5" />
+        <div className="grid h-16 shrink-0 grid-cols-[5rem_1fr] items-center border-b border-white/10">
+          <div className="flex w-20 justify-center">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500 text-slate-950">
+              <Building2 className="h-5 w-5" />
+            </div>
           </div>
-          <div className={cn("min-w-0", sidebarCollapsed && "hidden")}>
+          <div
+            className={cn(
+              sidebarLabelTransition,
+              sidebarCollapsed
+                ? "pointer-events-none -translate-x-1 opacity-0"
+                : "translate-x-0 opacity-100 delay-150",
+            )}
+          >
             <p className="text-sm font-semibold">Multi-Tenant WMS</p>
             <p className="text-xs text-slate-400">Warehouse SaaS</p>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto py-4">
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -248,14 +255,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white",
-                  sidebarCollapsed && "justify-center px-2",
+                  "mx-3 grid h-10 grid-cols-[3.5rem_1fr] items-center overflow-hidden rounded-md text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
                   active && "bg-white/10 text-white",
                 )}
                 title={sidebarCollapsed ? item.label : undefined}
               >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className={cn(sidebarCollapsed && "sr-only")}>{item.label}</span>
+                <span className="flex w-14 justify-center">
+                  <Icon className="h-4 w-4 shrink-0" />
+                </span>
+                <span
+                  className={cn(
+                    sidebarLabelTransition,
+                    "truncate",
+                    sidebarCollapsed
+                      ? "pointer-events-none -translate-x-1 opacity-0"
+                      : "translate-x-0 opacity-100 delay-150",
+                  )}
+                >
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -277,7 +295,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : (
               <>
                 <PanelLeftClose className="h-4 w-4" />
-                Collapse
+                <span className="overflow-hidden whitespace-nowrap transition-[max-width,opacity,transform] delay-100 duration-150 ease-out">
+                  Collapse
+                </span>
               </>
             )}
           </Button>
