@@ -304,25 +304,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </Button>
         </div>
-        <div className="relative h-12 border-t border-white/10 text-xs text-slate-400">
-          <div
-            className={cn(
-              "absolute inset-0 flex items-center px-4 transition-opacity duration-150 ease-out",
-              sidebarCollapsed ? "pointer-events-none opacity-0" : "opacity-100 delay-150",
-            )}
-          >
-            API docs: <span className="ml-1 text-slate-200">/api/docs/</span>
-          </div>
-          <div
-            className={cn(
-              "absolute inset-0 flex items-center justify-center transition-opacity duration-150 ease-out",
-              sidebarCollapsed ? "opacity-100 delay-150" : "pointer-events-none opacity-0",
-            )}
-            title="API docs available at /api/docs/"
-          >
-            API
-          </div>
-        </div>
       </aside>
 
       <div
