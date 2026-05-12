@@ -228,22 +228,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           sidebarCollapsed ? "w-20" : "w-64",
         )}
       >
-        <div className="grid h-16 shrink-0 grid-cols-[5rem_1fr] items-center border-b border-white/10">
-          <div className="flex w-20 justify-center">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500 text-slate-950">
-              <Building2 className="h-5 w-5" />
+        <div className="shrink-0 border-b border-white/10">
+          <div className="mx-3 grid h-16 grid-cols-[3.5rem_minmax(0,1fr)] items-center">
+            <div className="flex w-14 justify-center">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500 text-slate-950">
+                <Building2 className="h-5 w-5" />
+              </div>
             </div>
-          </div>
-          <div
-            className={cn(
-              sidebarLabelTransition,
-              sidebarCollapsed
-                ? "pointer-events-none -translate-x-1 opacity-0"
-                : "translate-x-0 opacity-100 delay-150",
-            )}
-          >
-            <p className="text-sm font-semibold">Multi-Tenant WMS</p>
-            <p className="text-xs text-slate-400">Warehouse SaaS</p>
+            <div
+              className={cn(
+                sidebarLabelTransition,
+                sidebarCollapsed
+                  ? "pointer-events-none -translate-x-1 opacity-0"
+                  : "translate-x-0 opacity-100 delay-150",
+              )}
+            >
+              <p className="text-sm font-semibold">Multi-Tenant WMS</p>
+              <p className="text-xs text-slate-400">Warehouse SaaS</p>
+            </div>
           </div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto py-4">
@@ -255,7 +257,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "mx-3 grid h-10 grid-cols-[3.5rem_1fr] items-center overflow-hidden rounded-md text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
+                  "mx-3 grid h-10 grid-cols-[3.5rem_minmax(0,1fr)] items-center rounded-md text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
                   active && "bg-white/10 text-white",
                 )}
                 title={sidebarCollapsed ? item.label : undefined}
@@ -320,7 +322,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div
         className={cn(
-          "transition-[padding-left] duration-200 ease-out",
+          "transition-[padding-left] duration-300 ease-out",
           sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
         )}
       >
