@@ -61,7 +61,7 @@ export default function StockMovementsPage() {
             {movementTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
           </NativeSelect>
         </CardContent>
-        <Table>
+        <Table className="min-w-[1080px]">
           <TableHeader>
             <TableRow>
               <TableHead>Date / Time</TableHead>

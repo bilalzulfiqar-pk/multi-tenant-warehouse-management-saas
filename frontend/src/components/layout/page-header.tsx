@@ -15,7 +15,7 @@ export function PageHeader({
         </h1>
         {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="flex w-full flex-wrap gap-2 md:w-auto md:justify-end">{actions}</div> : null}
     </div>
   );
 }

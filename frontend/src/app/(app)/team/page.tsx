@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ConfirmAction } from "@/components/domain/confirm-action";
 import { RoleBadge, StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
+import { MobileDataCard, MobileDataField } from "@/components/domain/mobile-data-card";
 import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { EmptyState } from "@/components/layout/empty-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
@@ -131,7 +132,63 @@ export default function TeamPage() {
         </TabsList>
         <TabsContent value="members">
           <Card>
-            <Table>
+            <div className="space-y-3 p-4 md:hidden">
+              {members.isLoading ? (
+                <TableSkeleton columns={2} rows={4} />
+              ) : members.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => members.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (members.data || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No members found"
+                        description="Accepted members will appear here."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (members.data || []).map((member) => (
+                <MobileDataCard
+                  key={member.id}
+                  title={member.user.full_name || member.user.email}
+                  subtitle={member.user.email}
+                  badge={<RoleBadge role={member.role} />}
+                  actions={
+                    <>
+                      <Button variant="ghost" size="sm" onClick={() => setMemberEdit(member)}>
+                        Edit
+                      </Button>
+                      <ConfirmAction
+                        title="Disable member?"
+                        description={`${member.user.email} will lose access to this workspace.`}
+                        confirmLabel="Disable"
+                        onConfirm={() => disableMember(member)}
+                      >
+                        <Button variant="ghost" size="sm">
+                          <UserMinus className="h-4 w-4" />
+                          Disable
+                        </Button>
+                      </ConfirmAction>
+                    </>
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Status" value={<StatusBadge value={member.status} />} />
+                    <MobileDataField label="Joined" value={formatDateTime(member.joined_at)} />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden md:block">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -186,11 +243,75 @@ export default function TeamPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </Card>
         </TabsContent>
         <TabsContent value="invites">
           <Card>
-            <Table>
+            <div className="space-y-3 p-4 md:hidden">
+              {invites.isLoading ? (
+                <TableSkeleton columns={2} rows={4} />
+              ) : invites.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => invites.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (invites.data || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No invites found"
+                        description="Pending manual invite links will appear here."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (invites.data || []).map((invite) => (
+                <MobileDataCard
+                  key={invite.id}
+                  title={invite.email}
+                  subtitle={formatDateTime(invite.expires_at)}
+                  badge={<RoleBadge role={invite.role as WorkspaceRole} />}
+                  actions={
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(frontendInviteLink(invite));
+                          toast.success("Invite link copied");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy link
+                      </Button>
+                      {invite.status === "pending" ? (
+                        <ConfirmAction
+                          title="Cancel invite?"
+                          description={`The invite for ${invite.email} will no longer be usable.`}
+                          confirmLabel="Cancel invite"
+                          onConfirm={() => cancelInvite(invite)}
+                        >
+                          <Button variant="ghost" size="sm">Cancel</Button>
+                        </ConfirmAction>
+                      ) : null}
+                    </>
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Status" value={<StatusBadge value={invite.status} />} />
+                    <MobileDataField label="Expires" value={formatDateTime(invite.expires_at)} />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden md:block">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
@@ -251,6 +372,7 @@ export default function TeamPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
@@ -268,7 +390,7 @@ export default function TeamPage() {
                 <option value="viewer">Viewer</option>
               </NativeSelect>
             </Field>
-            <Button type="submit">Create invite</Button>
+            <Button className="w-full sm:w-auto" type="submit">Create invite</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -292,7 +414,7 @@ export default function TeamPage() {
                 <option value="disabled">Disabled</option>
               </NativeSelect>
             </Field>
-            <Button type="submit">Save member</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save member</Button>
           </form>
         </DialogContent>
       </Dialog>

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { BooleanBadge } from "@/components/domain/badges";
 import { ConfirmAction } from "@/components/domain/confirm-action";
 import { Field } from "@/components/domain/field";
+import { MobileDataCard, MobileDataField } from "@/components/domain/mobile-data-card";
 import { PaginationControls } from "@/components/domain/pagination";
 import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
@@ -167,75 +168,154 @@ export default function ProductsPage() {
                 </NativeSelect>
               </div>
             </CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">Low stock</TableHead>
-                  <TableHead className="text-right">Cost</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={9}>
-                      <TableSkeleton columns={9} />
-                    </TableCell>
-                  </TableRow>
-                ) : products.isError ? (
-                  <TableErrorRow colSpan={9} onRetry={() => products.refetch()} />
-                ) : (products.data?.results || []).length === 0 ? (
-                  <TableEmptyRow
-                    colSpan={9}
-                    title="No products found"
-                    description="Create a product or adjust the current filters."
-                  />
-                ) : (products.data?.results || []).map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium text-slate-950">{product.sku}</TableCell>
-                    <TableCell>{product.name}</TableCell>
-                    <TableCell>{product.category_detail?.name || "-"}</TableCell>
-                    <TableCell>{product.unit_detail?.abbreviation || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      {product.low_stock_threshold ? formatQuantity(product.low_stock_threshold) : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">{formatMoney(product.default_cost)}</TableCell>
-                    <TableCell><BooleanBadge active={product.is_active} /></TableCell>
-                    <TableCell>{formatDateTime(product.updated_at)}</TableCell>
-                    <TableCell className="text-right">
-                      {canManage ? (
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => setProductForm(product)}>
-                            <Edit className="h-4 w-4" />
+            <div className="space-y-3 p-4 pt-0 md:hidden">
+              {products.isLoading ? (
+                <TableSkeleton columns={2} rows={4} />
+              ) : products.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => products.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (products.data?.results || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No products found"
+                        description="Create a product or adjust the current filters."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (products.data?.results || []).map((product) => (
+                <MobileDataCard
+                  key={product.id}
+                  title={product.name}
+                  subtitle={
+                    <>
+                      <p>{product.sku}</p>
+                      <p className="truncate">{product.category_detail?.name || "No category"}</p>
+                    </>
+                  }
+                  badge={<BooleanBadge active={product.is_active} />}
+                  actions={
+                    canManage ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setProductForm(product)}>
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <ConfirmAction
+                          title={product.is_active ? "Deactivate product?" : "Reactivate product?"}
+                          description={
+                            product.is_active
+                              ? "This product will be blocked from new stock operations."
+                              : "This product can be used in new stock operations again."
+                          }
+                          confirmLabel={product.is_active ? "Deactivate" : "Reactivate"}
+                          variant={product.is_active ? "danger" : "default"}
+                          onConfirm={() => toggle(`products/${product.id}`, product.is_active)}
+                        >
+                          <Button variant="ghost" size="sm">
+                            {product.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            {product.is_active ? "Deactivate" : "Reactivate"}
                           </Button>
-                          <ConfirmAction
-                            title={product.is_active ? "Deactivate product?" : "Reactivate product?"}
-                            description={
-                              product.is_active
-                                ? "This product will be blocked from new stock operations."
-                                : "This product can be used in new stock operations again."
-                            }
-                            confirmLabel={product.is_active ? "Deactivate" : "Reactivate"}
-                            variant={product.is_active ? "danger" : "default"}
-                            onConfirm={() => toggle(`products/${product.id}`, product.is_active)}
-                          >
-                            <Button variant="ghost" size="icon">
-                              {product.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                            </Button>
-                          </ConfirmAction>
-                        </div>
-                      ) : null}
-                    </TableCell>
+                        </ConfirmAction>
+                      </>
+                    ) : null
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Unit" value={product.unit_detail?.abbreviation || "-"} />
+                    <MobileDataField
+                      label="Low stock"
+                      value={
+                        product.low_stock_threshold
+                          ? formatQuantity(product.low_stock_threshold)
+                          : "-"
+                      }
+                    />
+                    <MobileDataField label="Cost" value={formatMoney(product.default_cost)} />
+                    <MobileDataField label="Updated" value={formatDateTime(product.updated_at)} />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden md:block">
+              <Table className="min-w-[960px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead className="text-right">Low stock</TableHead>
+                    <TableHead className="text-right">Cost</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {products.isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={9}>
+                        <TableSkeleton columns={9} />
+                      </TableCell>
+                    </TableRow>
+                  ) : products.isError ? (
+                    <TableErrorRow colSpan={9} onRetry={() => products.refetch()} />
+                  ) : (products.data?.results || []).length === 0 ? (
+                    <TableEmptyRow
+                      colSpan={9}
+                      title="No products found"
+                      description="Create a product or adjust the current filters."
+                    />
+                  ) : (products.data?.results || []).map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium text-slate-950">{product.sku}</TableCell>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell>{product.category_detail?.name || "-"}</TableCell>
+                      <TableCell>{product.unit_detail?.abbreviation || "-"}</TableCell>
+                      <TableCell className="text-right">
+                        {product.low_stock_threshold ? formatQuantity(product.low_stock_threshold) : "-"}
+                      </TableCell>
+                      <TableCell className="text-right">{formatMoney(product.default_cost)}</TableCell>
+                      <TableCell><BooleanBadge active={product.is_active} /></TableCell>
+                      <TableCell>{formatDateTime(product.updated_at)}</TableCell>
+                      <TableCell className="text-right">
+                        {canManage ? (
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setProductForm(product)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <ConfirmAction
+                              title={product.is_active ? "Deactivate product?" : "Reactivate product?"}
+                              description={
+                                product.is_active
+                                  ? "This product will be blocked from new stock operations."
+                                  : "This product can be used in new stock operations again."
+                              }
+                              confirmLabel={product.is_active ? "Deactivate" : "Reactivate"}
+                              variant={product.is_active ? "danger" : "default"}
+                              onConfirm={() => toggle(`products/${product.id}`, product.is_active)}
+                            >
+                              <Button variant="ghost" size="icon">
+                                {product.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                              </Button>
+                            </ConfirmAction>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             <PaginationControls page={page} setPage={setPage} data={products.data} />
           </Card>
         </TabsContent>
@@ -338,7 +418,7 @@ export default function ProductsPage() {
               <Field label="Low stock threshold"><Input name="low_stock_threshold" defaultValue={productForm?.low_stock_threshold || ""} placeholder="10.000" /></Field>
               <Field label="Default cost"><Input name="default_cost" defaultValue={productForm?.default_cost || ""} placeholder="15.25" /></Field>
             </div>
-            <Button type="submit">Save product</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save product</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -349,7 +429,7 @@ export default function ProductsPage() {
           <form className="grid gap-4" onSubmit={submitCategory}>
             <Field label="Name"><Input name="name" defaultValue={categoryForm?.name || ""} required /></Field>
             <Field label="Description"><Textarea name="description" defaultValue={categoryForm?.description || ""} /></Field>
-            <Button type="submit">Save category</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save category</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -360,7 +440,7 @@ export default function ProductsPage() {
           <form className="grid gap-4" onSubmit={submitUnit}>
             <Field label="Name"><Input name="name" defaultValue={unitForm?.name || ""} required /></Field>
             <Field label="Abbreviation"><Input name="abbreviation" defaultValue={unitForm?.abbreviation || ""} required /></Field>
-            <Button type="submit">Save unit</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save unit</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -389,38 +469,84 @@ function SimpleTable<T extends { id: string }>({
 }) {
   return (
     <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => <TableHead key={column}>{column}</TableHead>)}
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
+      <div className="space-y-3 p-4 md:hidden">
+        {isLoading ? (
+          <TableSkeleton columns={2} rows={3} />
+        ) : isError ? (
+          <div className="rounded-lg border bg-white">
+            <table className="w-full">
+              <tbody>
+                <TableErrorRow colSpan={1} onRetry={onRetry} />
+              </tbody>
+            </table>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-lg border bg-white">
+            <table className="w-full">
+              <tbody>
+                <TableEmptyRow
+                  colSpan={1}
+                  title={emptyTitle}
+                  description="Create one to start organizing catalog data."
+                />
+              </tbody>
+            </table>
+          </div>
+        ) : rows.map((row) => {
+          const cells = render(row);
+          return (
+            <MobileDataCard
+              key={row.id}
+              title={cells[0]}
+              subtitle={cells[1]}
+              badge={cells[2]}
+              actions={actions?.(row)}
+            >
+              {cells.slice(3).map((cell, index) => (
+                <MobileDataField
+                  key={index}
+                  label={columns[index + 3] || `Field ${index + 4}`}
+                  value={cell}
+                />
+              ))}
+            </MobileDataCard>
+          );
+        })}
+      </div>
+      <div className="hidden md:block">
+        <Table className="min-w-[760px]">
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={columns.length + 1}>
-                <TableSkeleton columns={columns.length + 1} />
-              </TableCell>
+              {columns.map((column) => <TableHead key={column}>{column}</TableHead>)}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ) : isError ? (
-            <TableErrorRow colSpan={columns.length + 1} onRetry={onRetry} />
-          ) : rows.length === 0 ? (
-            <TableEmptyRow
-              colSpan={columns.length + 1}
-              title={emptyTitle}
-              description="Create one to start organizing catalog data."
-            />
-          ) : rows.map((row) => (
-            <TableRow key={row.id}>
-              {render(row).map((cell, index) => <TableCell key={index}>{cell}</TableCell>)}
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-1">{actions?.(row)}</div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length + 1}>
+                  <TableSkeleton columns={columns.length + 1} />
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableErrorRow colSpan={columns.length + 1} onRetry={onRetry} />
+            ) : rows.length === 0 ? (
+              <TableEmptyRow
+                colSpan={columns.length + 1}
+                title={emptyTitle}
+                description="Create one to start organizing catalog data."
+              />
+            ) : rows.map((row) => (
+              <TableRow key={row.id}>
+                {render(row).map((cell, index) => <TableCell key={index}>{cell}</TableCell>)}
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">{actions?.(row)}</div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }

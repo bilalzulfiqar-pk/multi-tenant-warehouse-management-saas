@@ -124,6 +124,50 @@ textarea {
   }
 }
 
+@keyframes sheet-show-right {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-hide-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-show-left {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-hide-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+}
+
 @keyframes select-show {
   from {
     opacity: 0;
@@ -202,6 +246,29 @@ textarea {
 
 .dialog-content[data-state="closed"] .dialog-panel {
   animation-name: dialog-hide;
+}
+
+.sheet-panel {
+  animation-duration: 180ms;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+  will-change: opacity, transform;
+}
+
+.sheet-content[data-state="open"][data-side="right"] .sheet-panel {
+  animation-name: sheet-show-right;
+}
+
+.sheet-content[data-state="closed"][data-side="right"] .sheet-panel {
+  animation-name: sheet-hide-right;
+}
+
+.sheet-content[data-state="open"][data-side="left"] .sheet-panel {
+  animation-name: sheet-show-left;
+}
+
+.sheet-content[data-state="closed"][data-side="left"] .sheet-panel {
+  animation-name: sheet-hide-left;
 }
 
 .select-content {

@@ -58,7 +58,7 @@ export default function SettingsPage() {
           Only workspace Owners can update these settings.
         </Alert>
       ) : null}
-      <Card className="max-w-2xl">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle>{workspace?.name || "Workspace"}</CardTitle>
           <CardDescription>
@@ -97,7 +97,13 @@ export default function SettingsPage() {
                 <option value="false">Disabled</option>
               </NativeSelect>
             </Field>
-            <Button type="submit" disabled={!canEdit} isLoading={saving} loadingText="Saving...">
+            <Button
+              className="w-full sm:w-auto"
+              type="submit"
+              disabled={!canEdit}
+              isLoading={saving}
+              loadingText="Saving..."
+            >
               Save settings
             </Button>
           </form>

@@ -15,7 +15,7 @@ export function TableEmptyRow({
   return (
     <TableRow>
       <TableCell colSpan={colSpan}>
-        <div className="flex min-h-32 flex-col items-center justify-center p-6 text-center">
+        <div className="flex min-h-32 flex-col items-center justify-center p-5 text-center sm:p-6">
           <Inbox className="h-7 w-7 text-slate-300" />
           <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
           {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
@@ -37,7 +37,7 @@ export function TableErrorRow({
   return (
     <TableRow>
       <TableCell colSpan={colSpan}>
-        <div className="flex min-h-32 flex-col items-center justify-center p-6 text-center">
+        <div className="flex min-h-32 flex-col items-center justify-center p-5 text-center sm:p-6">
           <AlertCircle className="h-7 w-7 text-red-400" />
           <p className="mt-3 text-sm font-semibold text-slate-900">Unable to load data</p>
           <p className="mt-1 text-sm text-slate-500">{message}</p>

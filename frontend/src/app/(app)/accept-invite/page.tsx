@@ -55,7 +55,7 @@ function AcceptInvitePageContent() {
       <Alert className="mb-4">
         Use an account with the invited email address. This invite will add you to the current tenant workspace.
       </Alert>
-      <Card className="max-w-2xl">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle>Invite token</CardTitle>
           <CardDescription>Paste the token from the invite link.</CardDescription>
@@ -65,7 +65,7 @@ function AcceptInvitePageContent() {
             <Field label="Token">
               <Input value={token} onChange={(event) => setToken(event.target.value)} required />
             </Field>
-            <Button isLoading={loading} loadingText="Accepting..." type="submit">
+            <Button className="w-full sm:w-auto" isLoading={loading} loadingText="Accepting..." type="submit">
               Accept invite
             </Button>
           </form>

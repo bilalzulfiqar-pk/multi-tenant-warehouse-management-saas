@@ -72,7 +72,7 @@ function InventoryActionsPageContent() {
       ) : null}
       {!activeMode ? null : (
       <Tabs value={activeMode} onValueChange={(value) => setMode(value as Mode)}>
-        <TabsList>
+        <TabsList className="w-full sm:w-auto">
           {availableModes.map((item) => {
             const Icon = item.icon;
             return (
@@ -193,7 +193,7 @@ function StockInOutForm({ type }: { type: "stock-in" | "stock-out" }) {
         <Field label="Quantity"><Input name="quantity" placeholder="5.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder={type === "stock-in" ? "Initial stock" : "Operational removal"} /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button isLoading={loading} loadingText="Submitting..." type="submit">
+        <Button className="w-full sm:w-auto" isLoading={loading} loadingText="Submitting..." type="submit">
           {type === "stock-in" ? "Add stock" : "Remove stock"}
         </Button>
       </form>
@@ -259,7 +259,7 @@ function AdjustForm() {
         <Field label="Counted quantity" hint="Adjustment sets stock to the physical count."><Input name="counted_quantity" placeholder="20.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder="Physical count correction" required /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button isLoading={loading} loadingText="Submitting..." type="submit">Set counted quantity</Button>
+        <Button className="w-full sm:w-auto" isLoading={loading} loadingText="Submitting..." type="submit">Set counted quantity</Button>
       </form>
       )}
     </InventoryFormCard>
@@ -347,7 +347,7 @@ function TransferForm() {
         <Field label="Quantity"><Input name="quantity" placeholder="5.000" required /></Field>
         <Field label="Reason"><Input name="reason" placeholder="Move to another location" /></Field>
         <Field label="Notes"><Textarea name="notes" /></Field>
-        <Button isLoading={loading} loadingText="Submitting..." type="submit">Transfer stock</Button>
+        <Button className="w-full sm:w-auto" isLoading={loading} loadingText="Submitting..." type="submit">Transfer stock</Button>
       </form>
       )}
     </InventoryFormCard>
@@ -356,7 +356,7 @@ function TransferForm() {
 
 function InventoryFormCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="max-w-3xl">
+    <Card className="w-full max-w-3xl">
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
       <CardContent>{children}</CardContent>
     </Card>

@@ -65,6 +65,8 @@ async function createWorkspaceFromForm(page: Page, name: string, subdomain: stri
   await page.getByLabel("Company name").fill(name);
   await page.getByLabel("Subdomain").fill(subdomain);
   await page.getByRole("button", { name: "Create workspace" }).click();
+  await page.waitForURL(/\/dashboard$/);
+  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 }
 
@@ -296,4 +298,46 @@ test("staff and viewer invite flows keep role-aware inventory UI tight", async (
 
   await page.goto(`${new URL(page.url()).origin}/products`);
   await expect(page.getByRole("button", { name: "+ Product" })).toHaveCount(0);
+});
+
+test.describe("mobile responsiveness", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("mobile shell remains usable across key screens", async ({ page }) => {
+    test.setTimeout(120_000);
+    const { suffix } = await registerAndCreateWorkspace(page);
+    const setup = await createSetupData(page, suffix);
+    const mobileNav = page.getByRole("banner").getByRole("navigation");
+
+    await expect(mobileNav.getByRole("link", { name: "Dashboard" })).toBeVisible();
+    await expect(mobileNav.getByRole("link", { name: "Products" })).toBeVisible();
+    await expect(mobileNav.getByRole("link", { name: "Stock Levels" })).toBeVisible();
+    await expect(mobileNav.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
+    await expect(mobileNav.getByRole("button", { name: /More/ })).toBeVisible();
+
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+    await expect(page.getByText("Total Products")).toBeVisible();
+
+    await page.goto("/products");
+    await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
+    await expect(page.getByText(setup.product.sku).first()).toBeVisible();
+
+    await page.goto("/stock-levels");
+    await expect(page.getByRole("heading", { name: "Stock Levels" })).toBeVisible();
+    await page.getByPlaceholder("Search SKU, product, warehouse, or location").fill(setup.product.sku);
+    await expect(page.getByRole("cell", { name: setup.product.sku, exact: true }).first()).toBeVisible();
+
+    await page.goto("/inventory-actions");
+    await expect(page.getByRole("heading", { name: "Inventory Actions" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Stock In/ })).toBeVisible();
+
+    await mobileNav.getByRole("button", { name: /More/ }).click();
+    await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
+    await page.getByRole("link", { name: "Team" }).click();
+    await expect(page.getByRole("heading", { name: "Team" })).toBeVisible();
+
+    await page.goto("/workspaces");
+    await expect(page.getByRole("heading", { name: "Workspaces", exact: true })).toBeVisible();
+  });
 });

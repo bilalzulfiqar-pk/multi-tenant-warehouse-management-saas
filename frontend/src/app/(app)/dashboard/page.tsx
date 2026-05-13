@@ -150,7 +150,7 @@ export default function DashboardPage() {
             <CardTitle>Inventory by warehouse</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <Table className="min-w-[640px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Warehouse</TableHead>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
             <CardTitle>Low stock products</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
+            <Table className="min-w-[560px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>SKU</TableHead>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
           <CardTitle>Recent movements</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Type</TableHead>

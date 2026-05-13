@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ConfirmAction } from "@/components/domain/confirm-action";
 import { StatusBadge } from "@/components/domain/badges";
 import { Field } from "@/components/domain/field";
+import { MobileDataCard, MobileDataField } from "@/components/domain/mobile-data-card";
 import { PaginationControls } from "@/components/domain/pagination";
 import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { TableSkeleton } from "@/components/layout/loading-state";
@@ -148,74 +149,207 @@ export default function WarehousesPage() {
 
         <TabsContent value="warehouses">
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>City / Country</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {warehouses.isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <TableSkeleton columns={6} />
-                    </TableCell>
-                  </TableRow>
-                ) : warehouses.isError ? (
-                  <TableErrorRow colSpan={6} onRetry={() => warehouses.refetch()} />
-                ) : (warehouses.data?.results || []).length === 0 ? (
-                  <TableEmptyRow
-                    colSpan={6}
-                    title="No warehouses found"
-                    description="Create a warehouse or adjust the current search."
-                  />
-                ) : (warehouses.data?.results || []).map((warehouse) => (
-                  <TableRow key={warehouse.id}>
-                    <TableCell className="font-medium text-slate-950">{warehouse.code}</TableCell>
-                    <TableCell>{warehouse.name}</TableCell>
-                    <TableCell>{[warehouse.city, warehouse.country].filter(Boolean).join(", ") || "-"}</TableCell>
-                    <TableCell><StatusBadge value={warehouse.status} /></TableCell>
-                    <TableCell>{formatDateTime(warehouse.updated_at)}</TableCell>
-                    <TableCell className="text-right">
-                      {canManage ? (
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => setWarehouseForm(warehouse)}>
-                            <Edit className="h-4 w-4" />
+            <div className="space-y-3 p-4 md:hidden">
+              {warehouses.isLoading ? (
+                <TableSkeleton columns={2} rows={4} />
+              ) : warehouses.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => warehouses.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (warehouses.data?.results || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No warehouses found"
+                        description="Create a warehouse or adjust the current search."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (warehouses.data?.results || []).map((warehouse) => (
+                <MobileDataCard
+                  key={warehouse.id}
+                  title={warehouse.name}
+                  subtitle={warehouse.code}
+                  badge={<StatusBadge value={warehouse.status} />}
+                  actions={
+                    canManage ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setWarehouseForm(warehouse)}>
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <ConfirmAction
+                          title={warehouse.status === "active" ? "Deactivate warehouse?" : "Reactivate warehouse?"}
+                          description={
+                            warehouse.status === "active"
+                              ? "This warehouse will be blocked from new stock operations."
+                              : "This warehouse can be used in new stock operations again."
+                          }
+                          confirmLabel={warehouse.status === "active" ? "Deactivate" : "Reactivate"}
+                          variant={warehouse.status === "active" ? "danger" : "default"}
+                          onConfirm={() => toggle(`warehouses/${warehouse.id}`, warehouse.status)}
+                        >
+                          <Button variant="ghost" size="sm">
+                            {warehouse.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            {warehouse.status === "active" ? "Deactivate" : "Reactivate"}
                           </Button>
-                          <ConfirmAction
-                            title={warehouse.status === "active" ? "Deactivate warehouse?" : "Reactivate warehouse?"}
-                            description={
-                              warehouse.status === "active"
-                                ? "This warehouse will be blocked from new stock operations."
-                                : "This warehouse can be used in new stock operations again."
-                            }
-                            confirmLabel={warehouse.status === "active" ? "Deactivate" : "Reactivate"}
-                            variant={warehouse.status === "active" ? "danger" : "default"}
-                            onConfirm={() => toggle(`warehouses/${warehouse.id}`, warehouse.status)}
-                          >
-                            <Button variant="ghost" size="icon">
-                              {warehouse.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                            </Button>
-                          </ConfirmAction>
-                        </div>
-                      ) : null}
-                    </TableCell>
+                        </ConfirmAction>
+                      </>
+                    ) : null
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField
+                      label="City / Country"
+                      value={[warehouse.city, warehouse.country].filter(Boolean).join(", ") || "-"}
+                    />
+                    <MobileDataField label="Updated" value={formatDateTime(warehouse.updated_at)} />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden md:block">
+              <Table className="min-w-[760px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>City / Country</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {warehouses.isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <TableSkeleton columns={6} />
+                      </TableCell>
+                    </TableRow>
+                  ) : warehouses.isError ? (
+                    <TableErrorRow colSpan={6} onRetry={() => warehouses.refetch()} />
+                  ) : (warehouses.data?.results || []).length === 0 ? (
+                    <TableEmptyRow
+                      colSpan={6}
+                      title="No warehouses found"
+                      description="Create a warehouse or adjust the current search."
+                    />
+                  ) : (warehouses.data?.results || []).map((warehouse) => (
+                    <TableRow key={warehouse.id}>
+                      <TableCell className="font-medium text-slate-950">{warehouse.code}</TableCell>
+                      <TableCell>{warehouse.name}</TableCell>
+                      <TableCell>{[warehouse.city, warehouse.country].filter(Boolean).join(", ") || "-"}</TableCell>
+                      <TableCell><StatusBadge value={warehouse.status} /></TableCell>
+                      <TableCell>{formatDateTime(warehouse.updated_at)}</TableCell>
+                      <TableCell className="text-right">
+                        {canManage ? (
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setWarehouseForm(warehouse)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <ConfirmAction
+                              title={warehouse.status === "active" ? "Deactivate warehouse?" : "Reactivate warehouse?"}
+                              description={
+                                warehouse.status === "active"
+                                  ? "This warehouse will be blocked from new stock operations."
+                                  : "This warehouse can be used in new stock operations again."
+                              }
+                              confirmLabel={warehouse.status === "active" ? "Deactivate" : "Reactivate"}
+                              variant={warehouse.status === "active" ? "danger" : "default"}
+                              onConfirm={() => toggle(`warehouses/${warehouse.id}`, warehouse.status)}
+                            >
+                              <Button variant="ghost" size="icon">
+                                {warehouse.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                              </Button>
+                            </ConfirmAction>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             <PaginationControls page={warehousePage} setPage={setWarehousePage} data={warehouses.data} />
           </Card>
         </TabsContent>
 
         <TabsContent value="locations">
           <Card>
-            <Table>
+            <div className="space-y-3 p-4 md:hidden">
+              {locations.isLoading ? (
+                <TableSkeleton columns={2} rows={4} />
+              ) : locations.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => locations.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (locations.data?.results || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No locations found"
+                        description="Create a location or adjust the current search."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (locations.data?.results || []).map((location) => (
+                <MobileDataCard
+                  key={location.id}
+                  title={location.name}
+                  subtitle={location.code}
+                  badge={<StatusBadge value={location.status} />}
+                  actions={
+                    canManage ? (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setLocationForm(location)}>
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <ConfirmAction
+                          title={location.status === "active" ? "Deactivate location?" : "Reactivate location?"}
+                          description={
+                            location.status === "active"
+                              ? "This location will be blocked from new stock operations."
+                              : "This location can be used in new stock operations again."
+                          }
+                          confirmLabel={location.status === "active" ? "Deactivate" : "Reactivate"}
+                          variant={location.status === "active" ? "danger" : "default"}
+                          onConfirm={() => toggle(`locations/${location.id}`, location.status)}
+                        >
+                          <Button variant="ghost" size="sm">
+                            {location.status === "active" ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                            {location.status === "active" ? "Deactivate" : "Reactivate"}
+                          </Button>
+                        </ConfirmAction>
+                      </>
+                    ) : null
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Warehouse" value={location.warehouse_detail?.name || "-"} />
+                    <MobileDataField label="Type" value={titleCase(location.location_type)} />
+                    <MobileDataField label="Updated" value={formatDateTime(location.updated_at)} />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden md:block">
+            <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Code</TableHead>
@@ -278,6 +412,7 @@ export default function WarehousesPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
             <PaginationControls page={locationPage} setPage={setLocationPage} data={locations.data} />
           </Card>
         </TabsContent>
@@ -297,7 +432,7 @@ export default function WarehousesPage() {
               <Field label="City"><Input name="city" defaultValue={warehouseForm?.city || ""} /></Field>
               <Field label="Country"><Input name="country" defaultValue={warehouseForm?.country || ""} /></Field>
             </div>
-            <Button type="submit">Save warehouse</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save warehouse</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -323,7 +458,7 @@ export default function WarehousesPage() {
                 <option value="other">Other</option>
               </NativeSelect>
             </Field>
-            <Button type="submit">Save location</Button>
+            <Button className="w-full sm:w-auto" type="submit">Save location</Button>
           </form>
         </DialogContent>
       </Dialog>

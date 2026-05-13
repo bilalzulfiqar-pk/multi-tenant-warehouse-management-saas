@@ -85,9 +85,9 @@ export default function WorkspacesPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-700">
                       <Building2 className="h-5 w-5" />
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-950">{workspace.name}</p>
-                      <p className="text-sm text-slate-500">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-950">{workspace.name}</p>
+                      <p className="truncate text-sm text-slate-500">
                         {compactUrlHost(workspace.subdomain)}
                       </p>
                     </div>

@@ -14,13 +14,13 @@ export function AuthCard({
 }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
-      <div className="motion-page w-full max-w-md rounded-lg border bg-white p-6 shadow-sm">
+      <div className="motion-page w-full max-w-md rounded-lg border bg-white p-5 shadow-sm sm:p-6">
         <Link href="/" className="mb-8 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 text-emerald-300">
             <Building2 className="h-5 w-5" />
           </div>
-          <div>
-            <p className="font-semibold text-slate-950">Multi-Tenant WMS</p>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-slate-950">Multi-Tenant WMS</p>
             <p className="text-xs text-slate-500">Warehouse operations dashboard</p>
           </div>
         </Link>

@@ -47,6 +47,7 @@ export default function StockLevelsPage() {
             {canStockInOut(role) ? (
               <>
                 <Button asChild variant="success"><Link href="/inventory-actions?mode=stock-in"><Plus className="h-4 w-4" />Stock In</Link></Button>
+                {/* <Button asChild><Link href="/inventory-actions?mode=stock-in"><Plus className="h-4 w-4" />Stock In</Link></Button> */}
                 <Button asChild variant="outline"><Link href="/inventory-actions?mode=stock-out"><Minus className="h-4 w-4" />Stock Out</Link></Button>
               </>
             ) : null}
@@ -83,7 +84,7 @@ export default function StockLevelsPage() {
             {(locations.data || []).filter((item) => !warehouse || item.warehouse === warehouse).map((item) => <option key={item.id} value={item.id}>{item.code} - {item.name}</option>)}
           </NativeSelect>
         </CardContent>
-        <Table>
+        <Table className="min-w-[920px]">
           <TableHeader>
             <TableRow>
               <TableHead>SKU</TableHead>
@@ -119,7 +120,7 @@ export default function StockLevelsPage() {
                 <TableCell className="text-right font-semibold">{formatQuantity(level.quantity)}</TableCell>
                 <TableCell>{formatDateTime(level.updated_at)}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
+                  <div className="flex flex-wrap justify-end gap-1">
                     {canStockInOut(role) ? (
                       <>
                         <Button size="sm" variant="ghost" asChild><Link href={`/inventory-actions?mode=stock-in&product=${level.product}&warehouse=${level.warehouse}&location=${level.location}`}>In</Link></Button>

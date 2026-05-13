@@ -6,25 +6,32 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export const Dialog = DialogPrimitive.Root;
-export const DialogTrigger = DialogPrimitive.Trigger;
-export const DialogClose = DialogPrimitive.Close;
+export const Sheet = DialogPrimitive.Root;
+export const SheetTrigger = DialogPrimitive.Trigger;
+export const SheetClose = DialogPrimitive.Close;
 
-export function DialogContent({
+export function SheetContent({
   className,
   children,
+  side = "right",
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  side?: "left" | "right";
+}) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="dialog-overlay fixed inset-0 z-40 bg-slate-950/40" />
       <DialogPrimitive.Content
-        className="dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100vw-1rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 outline-none sm:w-[calc(100vw-2rem)]"
+        data-side={side}
+        className={cn(
+          "sheet-content fixed inset-y-0 z-50 w-[min(22rem,calc(100vw-1rem))] outline-none",
+          side === "right" ? "right-0" : "left-0",
+        )}
         {...props}
       >
         <div
           className={cn(
-            "dialog-panel relative max-h-[92vh] overflow-y-auto rounded-lg border bg-white p-4 shadow-xl sm:p-5",
+            "sheet-panel relative flex h-full flex-col border bg-white p-4 shadow-xl sm:p-5",
             className,
           )}
         >
@@ -45,11 +52,11 @@ export function DialogContent({
   );
 }
 
-export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("mb-4 pr-10 sm:pr-8", className)} {...props} />;
+export function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("mb-4 pr-10", className)} {...props} />;
 }
 
-export function DialogTitle({
+export function SheetTitle({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
@@ -61,22 +68,13 @@ export function DialogTitle({
   );
 }
 
-export function DialogDescription({
+export function SheetDescription({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
       className={cn("mt-1 text-sm text-slate-500", className)}
-      {...props}
-    />
-  );
-}
-
-export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );
