@@ -5,6 +5,7 @@ import {
   Boxes,
   Building2,
   ClipboardList,
+  FolderKanban,
   Gauge,
   Loader2,
   LogOut,
@@ -20,7 +21,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -65,12 +66,6 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-const mobilePrimaryNav = new Set([
-  "/dashboard",
-  "/products",
-  "/stock-levels",
-]);
-
 const sidebarLabelTransition =
   "min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-150 ease-out";
 
@@ -92,10 +87,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     "name" | "subdomain"
   > | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isTabletShell, setIsTabletShell] = useState(false);
+  const [tabletVisibleCount, setTabletVisibleCount] = useState(0);
   const currentHost = typeof window !== "undefined" ? window.location.host : "";
   const switchingBetweenTenants =
     typeof window !== "undefined" &&
     window.sessionStorage.getItem("wms_workspace_switching") === "true";
+  const tabletNavRef = useRef<HTMLDivElement | null>(null);
+  const tabletMeasureRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (!session?.workspace || pathname === "/workspaces") {
@@ -156,6 +155,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [queryClient]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 640px) and (max-width: 1023px)");
+    const syncTabletMode = () => setIsTabletShell(mediaQuery.matches);
+    syncTabletMode();
+    mediaQuery.addEventListener("change", syncTabletMode);
+    return () => mediaQuery.removeEventListener("change", syncTabletMode);
+  }, []);
+
   function toggleSidebar() {
     setSidebarCollapsed((current) => {
       const next = !current;
@@ -194,6 +205,80 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const visibleItems = navItems.filter((item) => {
+    if (item.href === "/audit-logs") {
+      return canViewAuditLogs(role);
+    }
+    if (item.href === "/team") {
+      return canManageMembers(role);
+    }
+    if (item.href === "/inventory-actions") {
+      return canStockInOut(role);
+    }
+    return true;
+  });
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || !isTabletShell) {
+      return;
+    }
+
+    const container = tabletNavRef.current;
+    if (!container) {
+      return;
+    }
+
+    let frame = 0;
+    const recalculate = () => {
+      const availableWidth = container.clientWidth;
+      if (!availableWidth) {
+        return;
+      }
+
+      const styles = window.getComputedStyle(container);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+      const widths = visibleItems.map((item) => {
+        const element = tabletMeasureRefs.current[item.href];
+        return element ? Math.ceil(element.getBoundingClientRect().width) : 0;
+      });
+
+      if (widths.some((width) => width === 0)) {
+        return;
+      }
+
+      let usedWidth = 0;
+      let count = 0;
+      for (const width of widths) {
+        const nextWidth = width + (count > 0 ? gap : 0);
+        if (count === 0 || usedWidth + nextWidth <= availableWidth) {
+          usedWidth += nextWidth;
+          count += 1;
+          continue;
+        }
+        break;
+      }
+
+      setTabletVisibleCount((current) => {
+        const next = Math.max(1, count);
+        return current === next ? current : next;
+      });
+    };
+
+    const scheduleRecalculate = () => {
+      cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(recalculate);
+    };
+
+    scheduleRecalculate();
+    const observer = new ResizeObserver(scheduleRecalculate);
+    observer.observe(container);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [isTabletShell, visibleItems]);
+
   if (sessionQuery.isLoading) {
     return switchingBetweenTenants ? <TenantSwitchBlankScreen /> : <WorkspaceLoadingScreen />;
   }
@@ -225,20 +310,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <WorkspaceLoadingScreen />;
   }
 
-  const visibleItems = navItems.filter((item) => {
-    if (item.href === "/audit-logs") {
-      return canViewAuditLogs(role);
-    }
-    if (item.href === "/team") {
-      return canManageMembers(role);
-    }
-    if (item.href === "/inventory-actions") {
-      return canStockInOut(role);
-    }
-    return true;
-  });
-  const mobilePrimaryItems = visibleItems.filter((item) => mobilePrimaryNav.has(item.href));
-  const mobileOverflowItems = visibleItems.filter((item) => !mobilePrimaryNav.has(item.href));
+  const tabletVisibleItems =
+    isTabletShell && tabletVisibleCount > 0
+      ? visibleItems.slice(0, tabletVisibleCount)
+      : [];
+  const drawerNavItems = isTabletShell ? visibleItems.slice(tabletVisibleItems.length) : visibleItems;
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <WorkspaceTransitionOverlay workspace={workspaceTransition} />
@@ -392,39 +468,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </SheetDescription>
                   </SheetHeader>
 
-                  <div className="border-t pt-4 sm:hidden">
-                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
-                      Pages
-                    </p>
-                    <div className="space-y-1">
-                      {visibleItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                        return (
-                          <SheetClose asChild key={item.href}>
-                            <Link
-                              href={item.href}
-                              className={cn(
-                                "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
-                                active && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
-                              )}
-                            >
-                              <Icon className="h-4 w-4 shrink-0" />
-                              {item.label}
-                            </Link>
-                          </SheetClose>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {mobileOverflowItems.length ? (
-                    <div className="hidden border-t pt-4 sm:block lg:hidden">
+                  {drawerNavItems.length ? (
+                    <div className="border-t pt-4">
                       <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
                         Pages
                       </p>
                       <div className="space-y-1">
-                        {mobileOverflowItems.map((item) => {
+                        {drawerNavItems.map((item) => {
                           const Icon = item.icon;
                           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                           return (
@@ -476,16 +526,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
                       Utilities
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <SheetClose asChild>
-                        <Button className="w-full justify-start" variant="outline" asChild>
-                          <Link href="/workspaces">Workspaces</Link>
-                        </Button>
+                        <Link
+                          href="/workspaces"
+                          className="flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
+                        >
+                          <FolderKanban className="h-4 w-4 shrink-0" />
+                          Workspaces
+                        </Link>
                       </SheetClose>
-                      <Button className="w-full justify-start" variant="ghost" onClick={logout}>
+                      <button
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"
+                        onClick={logout}
+                        type="button"
+                      >
                         <LogOut className="h-4 w-4" />
                         Sign out
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </SheetContent>
@@ -493,8 +551,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="hidden border-t px-4 py-2 sm:block lg:hidden">
-              <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {mobilePrimaryItems.map((item) => {
+              <div
+                ref={tabletNavRef}
+                className={cn(
+                  "flex items-center gap-1.5",
+                  isTabletShell && tabletVisibleCount === 0 && "invisible",
+                )}
+              >
+                {tabletVisibleItems.map((item) => {
                   const Icon = item.icon;
                   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
@@ -502,17 +566,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium text-slate-600",
+                        "flex basis-auto grow items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-slate-600",
                         active && "bg-slate-950 text-white",
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
-                      {item.label}
+                      <span className="whitespace-nowrap">{item.label}</span>
                     </Link>
                   );
                 })}
               </div>
             </nav>
+            <div className="pointer-events-none absolute left-4 top-0 -z-10 hidden opacity-0 sm:block lg:hidden">
+              <div className="flex items-center gap-1.5">
+                {visibleItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.href}
+                      ref={(node) => {
+                        tabletMeasureRefs.current[item.href] = node;
+                      }}
+                      className="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium"
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="whitespace-nowrap">{item.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="hidden min-h-16 flex-col gap-3 px-4 py-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-6">
