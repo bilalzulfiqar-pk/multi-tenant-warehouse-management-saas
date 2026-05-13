@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import { MovementBadge, StatusBadge } from "@/components/domain/badges";
+import { MobileDataCard, MobileDataField } from "@/components/domain/mobile-data-card";
 import { TableEmptyRow, TableErrorRow } from "@/components/domain/table-state";
 import { EmptyState } from "@/components/layout/empty-state";
 import { StatCardsSkeleton, TableSkeleton } from "@/components/layout/loading-state";
@@ -150,47 +151,89 @@ export default function DashboardPage() {
             <CardTitle>Inventory by warehouse</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Warehouse</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Products</TableHead>
-                  <TableHead className="text-right">Total stock</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {byWarehouse.isLoading ? (
+            <div className="space-y-3 p-4 sm:hidden">
+              {byWarehouse.isLoading ? (
+                <TableSkeleton columns={2} rows={3} />
+              ) : byWarehouse.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => byWarehouse.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (byWarehouse.data || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No warehouse inventory yet"
+                        description="Stock quantities will appear after inventory operations."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (byWarehouse.data || []).map((item) => (
+                <MobileDataCard
+                  key={item.warehouse}
+                  title={item.warehouse_name}
+                  subtitle={item.warehouse_code}
+                  badge={<StatusBadge value={item.status} />}
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Products" value={item.product_count} />
+                    <MobileDataField
+                      label="Total stock"
+                      value={<span className="font-medium">{formatQuantity(item.total_stock_quantity)}</span>}
+                    />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <Table className="min-w-[560px]">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4}>
-                      <TableSkeleton columns={4} />
-                    </TableCell>
+                    <TableHead>Warehouse</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Products</TableHead>
+                    <TableHead className="text-right">Total stock</TableHead>
                   </TableRow>
-                ) : byWarehouse.isError ? (
-                  <TableErrorRow colSpan={4} onRetry={() => byWarehouse.refetch()} />
-                ) : (byWarehouse.data || []).length === 0 ? (
-                  <TableEmptyRow
-                    colSpan={4}
-                    title="No warehouse inventory yet"
-                    description="Stock quantities will appear after inventory operations."
-                  />
-                ) : (byWarehouse.data || []).map((item) => (
-                  <TableRow key={item.warehouse}>
-                    <TableCell>
-                      <p className="font-medium text-slate-950">{item.warehouse_name}</p>
-                      <p className="text-xs text-slate-500">{item.warehouse_code}</p>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge value={item.status} />
-                    </TableCell>
-                    <TableCell className="text-right">{item.product_count}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatQuantity(item.total_stock_quantity)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {byWarehouse.isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <TableSkeleton columns={4} />
+                      </TableCell>
+                    </TableRow>
+                  ) : byWarehouse.isError ? (
+                    <TableErrorRow colSpan={4} onRetry={() => byWarehouse.refetch()} />
+                  ) : (byWarehouse.data || []).length === 0 ? (
+                    <TableEmptyRow
+                      colSpan={4}
+                      title="No warehouse inventory yet"
+                      description="Stock quantities will appear after inventory operations."
+                    />
+                  ) : (byWarehouse.data || []).map((item) => (
+                    <TableRow key={item.warehouse}>
+                      <TableCell>
+                        <p className="font-medium text-slate-950">{item.warehouse_name}</p>
+                        <p className="text-xs text-slate-500">{item.warehouse_code}</p>
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={item.status} />
+                      </TableCell>
+                      <TableCell className="text-right">{item.product_count}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatQuantity(item.total_stock_quantity)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
@@ -199,42 +242,79 @@ export default function DashboardPage() {
             <CardTitle>Low stock products</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table className="min-w-[560px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead className="text-right">Threshold</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lowStock.isLoading ? (
+            <div className="space-y-3 p-4 sm:hidden">
+              {lowStock.isLoading ? (
+                <TableSkeleton columns={2} rows={3} />
+              ) : lowStock.isError ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableErrorRow colSpan={1} onRetry={() => lowStock.refetch()} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (lowStock.data || []).length === 0 ? (
+                <div className="rounded-lg border bg-white">
+                  <table className="w-full">
+                    <tbody>
+                      <TableEmptyRow
+                        colSpan={1}
+                        title="No low stock products"
+                        description="Products below their thresholds will appear here."
+                      />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (lowStock.data || []).map((item) => (
+                <MobileDataCard key={item.id} title={item.name} subtitle={item.sku}>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <MobileDataField label="Stock" value={formatQuantity(item.total_stock)} />
+                    <MobileDataField
+                      label="Threshold"
+                      value={formatQuantity(item.low_stock_threshold)}
+                    />
+                  </div>
+                </MobileDataCard>
+              ))}
+            </div>
+            <div className="hidden sm:block">
+              <Table className="min-w-[520px]">
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4}>
-                      <TableSkeleton columns={4} />
-                    </TableCell>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Threshold</TableHead>
                   </TableRow>
-                ) : lowStock.isError ? (
-                  <TableErrorRow colSpan={4} onRetry={() => lowStock.refetch()} />
-                ) : (lowStock.data || []).length === 0 ? (
-                  <TableEmptyRow
-                    colSpan={4}
-                    title="No low stock products"
-                    description="Products below their thresholds will appear here."
-                  />
-                ) : (lowStock.data || []).map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium text-slate-950">{item.sku}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell className="text-right">{formatQuantity(item.total_stock)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatQuantity(item.low_stock_threshold)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {lowStock.isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <TableSkeleton columns={4} />
+                      </TableCell>
+                    </TableRow>
+                  ) : lowStock.isError ? (
+                    <TableErrorRow colSpan={4} onRetry={() => lowStock.refetch()} />
+                  ) : (lowStock.data || []).length === 0 ? (
+                    <TableEmptyRow
+                      colSpan={4}
+                      title="No low stock products"
+                      description="Products below their thresholds will appear here."
+                    />
+                  ) : (lowStock.data || []).map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium text-slate-950">{item.sku}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell className="text-right">{formatQuantity(item.total_stock)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatQuantity(item.low_stock_threshold)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -244,7 +324,7 @@ export default function DashboardPage() {
           <CardTitle>Recent movements</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table className="min-w-[760px]">
+          <Table className="min-w-[680px] sm:min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Type</TableHead>

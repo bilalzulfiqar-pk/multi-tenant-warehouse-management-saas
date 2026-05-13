@@ -316,7 +316,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       : [];
   const drawerNavItems = isTabletShell ? visibleItems.slice(tabletVisibleItems.length) : visibleItems;
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950">
       <WorkspaceTransitionOverlay workspace={workspaceTransition} />
       <aside
         className={cn(
@@ -445,7 +445,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   ) : null}
                 </div>
               </div>
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <Sheet modal={false} open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button
                     aria-label="Open menu"
@@ -550,7 +550,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Sheet>
             </div>
 
-            <nav className="hidden border-t px-4 py-2 sm:block lg:hidden">
+            <nav className="relative hidden border-t px-4 py-2 sm:block lg:hidden">
               <div
                 ref={tabletNavRef}
                 className={cn(
@@ -576,26 +576,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   );
                 })}
               </div>
-            </nav>
-            <div className="pointer-events-none absolute left-4 top-0 -z-10 hidden opacity-0 sm:block lg:hidden">
-              <div className="flex items-center gap-1.5">
-                {visibleItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.href}
-                      ref={(node) => {
-                        tabletMeasureRefs.current[item.href] = node;
-                      }}
-                      className="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium"
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="whitespace-nowrap">{item.label}</span>
-                    </div>
-                  );
-                })}
+              <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden h-0 overflow-hidden opacity-0 sm:block lg:hidden">
+                <div className="flex w-max items-center gap-1.5">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.href}
+                        ref={(node) => {
+                          tabletMeasureRefs.current[item.href] = node;
+                        }}
+                        className="flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium"
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="whitespace-nowrap">{item.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </nav>
           </div>
 
           <div className="hidden min-h-16 flex-col gap-3 px-4 py-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-6">
