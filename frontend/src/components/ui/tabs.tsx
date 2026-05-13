@@ -25,7 +25,7 @@ export function TabsTrigger({
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "rounded px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[state=active]:bg-slate-950 data-[state=active]:text-white",
+        "cursor-pointer rounded px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[state=active]:bg-slate-950 data-[state=active]:text-white",
         className,
       )}
       {...props}

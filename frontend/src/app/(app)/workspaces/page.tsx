@@ -77,7 +77,7 @@ export default function WorkspacesPage() {
               workspaces.map((workspace) => (
                 <button
                   key={workspace.id}
-                  className="flex w-full items-center justify-between rounded-lg border bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40"
+                  className="flex w-full cursor-pointer items-center justify-between rounded-lg border bg-white p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50/40"
                   onClick={() => selectWorkspace(workspace)}
                   type="button"
                 >

@@ -358,6 +358,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex flex-wrap items-center gap-2">
               <NativeSelect
                 className="w-56"
+                placeholder="Select workspace"
                 value={session.workspace?.subdomain || ""}
                 onChange={(event) => {
                   const workspace = session.workspaces.find(
@@ -369,7 +370,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 }}
                 disabled={switchWorkspace.isPending}
               >
-                <option value="">Select workspace</option>
                 {session.workspaces.map((workspace) => (
                   <option key={workspace.id} value={workspace.subdomain}>
                     {workspace.name}
