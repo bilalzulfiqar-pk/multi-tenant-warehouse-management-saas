@@ -1,135 +1,146 @@
 # Multi-Tenant Warehouse Management SaaS
 
-Backend-first Django REST Framework portfolio project for a multi-tenant warehouse management SaaS. The MVP demonstrates subdomain-based tenancy, JWT authentication, workspace role permissions, warehouse/catalog setup, transaction-safe inventory workflows, audit logs, dashboard APIs, API documentation, Dockerized development, and automated business-rule tests.
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5-092E20?logo=django&logoColor=white)
+![Django REST Framework](https://img.shields.io/badge/DRF-3.15-A30000?logo=django&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Celery](https://img.shields.io/badge/Celery-5.5-37814A?logo=celery&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0A0A0A)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-green?logo=open-source-initiative&logoColor=white)
 
-`docs/architecture.md` is the source of truth for the MVP architecture. `docs/project-brief.md` is background/original intent.
+Backend-first warehouse management SaaS built with Django REST Framework and a tenant-aware Next.js frontend. The project demonstrates shared-schema multi-tenancy, JWT authentication, workspace roles and invites, warehouse and catalog setup, transaction-safe inventory operations, audit logs, dashboard APIs, and a responsive operations UI.
 
-## Tech Stack
+## What It Does
 
-- Python 3.11
-- Django 5
-- Django REST Framework
-- SimpleJWT
-- PostgreSQL
-- Redis
-- Celery
-- django-environ
-- django-filter
-- drf-spectacular
-- pytest and pytest-django
-- Docker Compose
-- Next.js 16, React 19, and TypeScript
-- Tailwind CSS and shadcn-style UI primitives
-- TanStack Query
+- Shared-schema multi-tenancy using workspace subdomains.
+- Email-based authentication with JWT login, refresh, and profile endpoints.
+- Workspace onboarding, role-based memberships, invites, and workspace switching.
+- Warehouse and location management with active or inactive lifecycle controls.
+- Product categories, units, products, SKU rules, and low-stock thresholds.
+- Transaction-safe stock in, stock out, adjustment, and transfer workflows.
+- Append-only stock movement history and audit logs.
+- Tenant-scoped dashboard summaries, low-stock alerts, and recent activity.
+- Responsive Next.js frontend with HttpOnly cookies and a BFF proxy layer.
+- Swagger, OpenAPI schema, ReDoc, pytest coverage, and Dockerized local development.
 
-## MVP Features
+## Architecture
 
-- Email-based custom user model.
-- JWT register, login, refresh, and profile endpoints.
-- Workspace creation with automatic Owner membership.
-- Subdomain-based tenant resolution with shared database/shared schema tenancy.
-- Workspace memberships, roles, invites, invite acceptance, and member management.
-- Owner, Admin, Manager, Staff, and Viewer permissions.
-- Warehouse and warehouse-location setup with activate/deactivate lifecycle actions.
-- Product categories, units of measure, products, SKU uniqueness, and active/inactive product lifecycle.
-- Stock levels by product, warehouse, and location.
-- Stock in, stock out, counted adjustment, and warehouse transfer operations.
-- Transaction-safe stock mutations with row locking and rollback behavior.
-- Append-only stock movement history.
-- Audit logs for important workspace, setup, and inventory events.
-- Tenant-scoped dashboard summary, low-stock, inventory-by-warehouse, and recent movement APIs.
-- Page-number pagination, filtering, search, and ordering for list APIs.
-- Swagger UI, OpenAPI schema, and ReDoc.
-- Automated tests for the highest-risk business rules.
-- Next.js frontend dashboard with HttpOnly JWT cookies, tenant-aware API forwarding, role-aware navigation, and inventory workflow screens.
-
-## MVP Boundaries
-
-The backend MVP intentionally excludes Stripe, billing, subscription plans, AI, receiving workflows, dispatch workflows, supplier/customer modules, email notifications, PDF reports, and CSV import/export. The frontend added afterward stays inside those same product boundaries.
-
-## Architecture Highlights
-
-The backend uses shared-schema multi-tenancy. Each tenant-owned model stores a `workspace` foreign key, while middleware resolves the active workspace from the request subdomain.
+The frontend talks to Next.js route handlers first, not directly to Django. Those handlers forward requests to the correct Django API host, while Django remains the source of truth for tenancy, permissions, and inventory business rules.
 
 ```mermaid
 flowchart LR
-    Client["API client"] --> Host["acme.localhost:8000"]
-    Host --> Middleware["TenantMiddleware"]
-    Middleware --> Workspace["Workspace by subdomain"]
-    Workspace --> DRF["DRF view"]
-    DRF --> Auth["JWT authentication"]
-    Auth --> Membership["Active workspace membership"]
+    Browser["Browser<br/>tenant.lvh.me:3000"] --> Next["Next.js frontend + BFF"]
+    Next --> Global["Global API routes"]
+    Next --> Tenant["Tenant API routes"]
+    Global --> Django["Django REST API"]
+    Tenant --> Django
+    Django --> Postgres["PostgreSQL"]
+    Django --> Redis["Redis"]
+    Redis --> Celery["Celery worker"]
+```
+
+Tenant context comes from the subdomain, but authorization still requires JWT authentication, active workspace membership, and role-based permission checks.
+
+```mermaid
+flowchart LR
+    Host["pakmart.localhost:8000"] --> Middleware["TenantMiddleware"]
+    Middleware --> Workspace["Resolve active workspace"]
+    Workspace --> Auth["JWT authentication"]
+    Auth --> Membership["Active membership check"]
     Membership --> Role["Role permission"]
-    Role --> Queryset["Tenant-scoped queryset"]
+    Role --> Queryset["Tenant-scoped query / service"]
     Queryset --> Response["JSON response"]
 ```
 
-Important security rule: the subdomain selects tenant context, but it is not the authorization boundary. Protected tenant APIs also require a valid JWT, active membership in `request.workspace`, and the correct role for the operation.
+More implementation detail lives in [docs/architecture-summary.md](docs/architecture-summary.md) and [docs/api-examples.md](docs/api-examples.md).
 
-## App Structure
+## Tech Stack
 
-```text
-backend/
-  accounts/     email user model and JWT account APIs
-  workspaces/   workspaces, memberships, invites, tenant middleware, role permissions
-  warehouse/    warehouses and warehouse locations
-  catalog/      categories, units, products, SKU rules
-  inventory/    stock levels, stock movements, stock operation services
-  audit/        audit log model, service, read-only APIs
-  dashboard/    read-only reporting selectors and APIs
-  common/       shared exceptions, mixins, pagination
-  config/       settings, URLs, ASGI/WSGI, Celery
+- Backend: Python 3.11+, Django 5, Django REST Framework, SimpleJWT, django-filter, drf-spectacular, Celery
+- Data and infra: PostgreSQL 16, Redis 7, Docker Compose
+- Frontend: Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, TanStack Query
+- Testing: pytest, pytest-django, Vitest, Playwright
+
+## Core Modules
+
+- `accounts`: custom user model and auth APIs
+- `workspaces`: workspaces, roles, invites, tenant middleware
+- `warehouse`: warehouses and storage locations
+- `catalog`: categories, units, products, SKU rules
+- `inventory`: stock levels, movements, and mutation services
+- `audit`: append-only audit logs
+- `dashboard`: tenant-scoped reporting APIs
+- `frontend`: responsive Next.js dashboard and BFF API layer
+
+## Quick Start
+
+### 1. Clone and enter the project
+
+```powershell
+git clone <your-repo-url>
+cd multi-tenant-warehouse-management-saas
 ```
 
-## Local Development Setup
-
-Copy the example environment file if you want local overrides:
+### 2. Create local environment overrides
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Build the images:
+You can run with the defaults from `.env.example`, then adjust values later as needed.
+
+### 3. Start the stack
 
 ```powershell
-docker compose build
+docker compose up -d --build
 ```
 
-Run database migrations:
+### 4. Run migrations
 
 ```powershell
 docker compose run --rm backend python manage.py migrate
 ```
 
-Start the stack:
-
-```powershell
-docker compose up -d
-```
-
-The backend API runs at `http://localhost:8000`; the optional Next.js frontend service runs at `http://localhost:3000`.
-
-The frontend uses `lvh.me` as the local shared-cookie domain so one frontend login works across workspace subdomains. Use tenant URLs such as `http://acme.lvh.me:3000/dashboard`. If you open `localhost` or `*.localhost` pages, the frontend redirects them to matching `lvh.me` URLs before login cookies are created.
-
-For local frontend development outside Docker:
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-## Demo Data
-
-For a portfolio walkthrough, seed Pakistan-region demo data after migrations:
+### 5. Seed demo data
 
 ```powershell
 docker compose run --rm backend python manage.py seed_pakistan_demo
 ```
 
-The command creates demo users, workspaces, warehouses, locations, catalog items, opening stock, stock movements, audit logs, and pending invites. It is safe to run again; existing stock seed movements are not duplicated.
+### 6. Open the app
 
-All demo users use this password:
+```text
+Frontend login: http://lvh.me:3000/login
+Swagger UI:     http://localhost:8000/api/docs/
+ReDoc:          http://localhost:8000/api/redoc/
+OpenAPI schema: http://localhost:8000/api/schema/
+```
+
+Tenant dashboard examples after seeding:
+
+```text
+http://pakmart.lvh.me:3000/dashboard
+http://punjabtraders.lvh.me:3000/dashboard
+http://indussupplies.lvh.me:3000/dashboard
+http://karachifoods.lvh.me:3000/dashboard
+```
+
+## Demo Data
+
+The included `seed_pakistan_demo` command creates Pakistan-region sample data for realistic testing:
+
+- multiple workspaces
+- warehouses and warehouse locations
+- catalog categories, units, and products
+- stock levels and stock movements
+- audit log history
+- memberships and pending invites
+
+Shared demo password:
 
 ```text
 PakistanDemo123!
@@ -137,40 +148,66 @@ PakistanDemo123!
 
 Main demo users:
 
-| Email | Role |
+| Email | Access |
 |---|---|
-| `owner@pakdemo.example.com` | Owner |
+| `owner@pakdemo.example.com` | Owner across `pakmart`, `punjabtraders`, `indussupplies` |
 | `admin@pakdemo.example.com` | Admin |
 | `manager@pakdemo.example.com` | Manager |
 | `staff@pakdemo.example.com` | Staff |
 | `viewer@pakdemo.example.com` | Viewer |
-| `nadia@pakdemo.example.com` | Limited multi-workspace user |
+| `nadia@pakdemo.example.com` | Limited user with `pakmart` and `karachifoods` |
 
-The main demo users can access `pakmart`, `punjabtraders`, and `indussupplies`. Nadia can access `pakmart` and `karachifoods`, which is useful for testing the workspace switcher with a different account.
+## Environment Variables
 
-Useful frontend URLs after seeding:
+Copy from `.env.example`. Docker Compose already provides local defaults, but these are the project variables that matter:
+
+| Variable | Description | Example |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django secret key for signing sessions and tokens | `change-me` |
+| `DJANGO_DEBUG` | Enable Django debug mode locally | `True` |
+| `DJANGO_ALLOWED_HOSTS` | Allowed backend hosts and wildcard local domains | `localhost,127.0.0.1,backend,.localhost,.lvh.me,.localtest.me` |
+| `POSTGRES_DB` | PostgreSQL database name | `warehouse_saas` |
+| `POSTGRES_USER` | PostgreSQL username | `warehouse_user` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `warehouse_password` |
+| `POSTGRES_HOST` | PostgreSQL host used by Django and Docker | `postgres` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `DATABASE_URL` | Full Django database connection string | `postgres://warehouse_user:warehouse_password@postgres:5432/warehouse_saas` |
+| `REDIS_URL` | Redis connection URL | `redis://redis:6379/0` |
+| `CELERY_BROKER_URL` | Celery broker URL | `redis://redis:6379/0` |
+| `CELERY_RESULT_BACKEND` | Celery result backend URL | `redis://redis:6379/0` |
+| `BACKEND_INTERNAL_ORIGIN` | Next.js server-side origin for Django API calls | `http://backend:8000` |
+| `TENANT_BACKEND_HOST_SUFFIX` | Tenant host suffix used by the frontend BFF | `lvh.me:8000` |
+| `FRONTEND_COOKIE_DOMAIN` | Shared local cookie domain for workspace subdomains | `lvh.me` |
+| `FRONTEND_BASE_DOMAIN` | Local frontend base domain | `lvh.me` |
+| `NEXT_PUBLIC_FRONTEND_BASE_DOMAIN` | Public frontend base domain used in browser redirects | `lvh.me` |
+| `NEXT_PUBLIC_APP_NAME` | Frontend app display name | `Multi-Tenant WMS` |
+
+## Local Usage Notes
+
+- Use `lvh.me` for frontend testing so cookies can be shared across workspace subdomains.
+- Root and auth APIs are easiest to test from `localhost:8000`.
+- Tenant APIs should be tested from a tenant host such as `pakmart.localhost:8000`.
+
+Examples:
 
 ```text
+http://localhost:8000/api/docs/
+http://pakmart.localhost:8000/api/products/
 http://lvh.me:3000/login
 http://pakmart.lvh.me:3000/dashboard
-http://punjabtraders.lvh.me:3000/dashboard
-http://indussupplies.lvh.me:3000/dashboard
-http://karachifoods.lvh.me:3000/dashboard
 ```
 
-Run Django checks:
+## Verification
+
+Backend checks:
 
 ```powershell
 docker compose run --rm backend python manage.py check
-```
-
-Run tests:
-
-```powershell
 docker compose run --rm backend pytest
+docker compose exec backend python manage.py shell -c "from config.celery import celery_health_check; print(celery_health_check.delay().get(timeout=10))"
 ```
 
-Run frontend checks:
+Frontend checks:
 
 ```powershell
 cd frontend
@@ -180,185 +217,25 @@ npm test
 npm run build
 ```
 
-Check Celery through Redis:
+Playwright smoke tests can also be run locally from `frontend/`:
 
 ```powershell
-docker compose exec backend python manage.py shell -c "from config.celery import celery_health_check; print(celery_health_check.delay().get(timeout=10))"
+npm run e2e
 ```
 
-Stop services:
+## API Coverage
 
-```powershell
-docker compose down
-```
+Major API areas in the current project:
 
-## Environment Variables
+- Auth: register, login, refresh, current user profile
+- Workspaces: create, list, current workspace settings
+- Team: memberships, invite create, invite accept, disable member
+- Warehouse: warehouses and locations
+- Catalog: categories, units, products
+- Inventory: stock levels, stock movements, stock in, stock out, adjust, transfer
+- Audit: audit log list and detail
+- Dashboard: summary, low stock, inventory by warehouse, recent movements
 
-`.env.example` documents the local variables used by Docker Compose:
+## License
 
-- `DJANGO_SECRET_KEY`
-- `DJANGO_DEBUG`
-- `DJANGO_ALLOWED_HOSTS`
-- `DATABASE_URL`
-- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`
-- `REDIS_URL`
-- `CELERY_BROKER_URL`
-- `CELERY_RESULT_BACKEND`
-- `BACKEND_INTERNAL_ORIGIN`
-- `TENANT_BACKEND_HOST_SUFFIX`
-- `FRONTEND_COOKIE_DOMAIN`
-- `FRONTEND_BASE_DOMAIN`
-- `NEXT_PUBLIC_FRONTEND_BASE_DOMAIN`
-- `NEXT_PUBLIC_APP_NAME`
-
-Docker Compose provides development defaults, so copying `.env.example` is optional for local development.
-
-## Local Subdomain Setup
-
-Tenant APIs rely on the request host. Preferred local tenant URLs:
-
-```text
-http://acme.localhost:8000/api/products/
-http://tenant1.localhost:8000/api/products/
-http://tenant2.localhost:8000/api/products/
-http://acme.lvh.me:3000/dashboard
-```
-
-If your OS/browser does not resolve `*.localhost`, add hosts entries:
-
-```text
-127.0.0.1 acme.localhost
-127.0.0.1 tenant1.localhost
-127.0.0.1 tenant2.localhost
-```
-
-Alternative local wildcard-style domains:
-
-```text
-http://acme.lvh.me:8000
-http://acme.localtest.me:8000
-```
-
-Root-domain APIs such as registration and workspace creation can use `localhost:8000`. Tenant-owned APIs such as products, warehouses, inventory, audit logs, and dashboard should use a tenant host such as `acme.localhost:8000`.
-
-## API Documentation
-
-With the backend service running:
-
-- Swagger UI: `http://localhost:8000/api/docs/`
-- OpenAPI schema: `http://localhost:8000/api/schema/`
-- ReDoc: `http://localhost:8000/api/redoc/`
-
-Swagger can also be opened from a tenant host, for example `http://acme.localhost:8000/api/docs/`, once that workspace exists.
-
-## API Surface
-
-Root/global endpoints:
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/auth/register/` | Register user |
-| POST | `/api/auth/login/` | Get access and refresh tokens |
-| POST | `/api/auth/token/refresh/` | Refresh access token |
-| GET | `/api/auth/me/` | Get current user |
-| PATCH | `/api/auth/me/` | Update profile name |
-| POST | `/api/workspaces/create/` | Create workspace and Owner membership |
-| GET | `/api/workspaces/` | List current user's active workspaces |
-
-Tenant-scoped endpoints:
-
-| Area | Endpoints |
-|---|---|
-| Workspace | `GET/PATCH /api/workspace/` |
-| Members | `GET /api/members/`, `GET/PATCH /api/members/{id}/`, `POST /api/members/{id}/disable/` |
-| Invites | `GET/POST /api/invites/`, `GET /api/invites/{id}/`, `POST /api/invites/{id}/cancel/`, `POST /api/invites/accept/` |
-| Warehouse | `GET/POST /api/warehouses/`, `GET/PATCH /api/warehouses/{id}/`, `POST /api/warehouses/{id}/deactivate/`, `POST /api/warehouses/{id}/activate/` |
-| Locations | `GET/POST /api/locations/`, `GET/PATCH /api/locations/{id}/`, `POST /api/locations/{id}/deactivate/`, `POST /api/locations/{id}/activate/` |
-| Catalog | `GET/POST /api/categories/`, `GET/PATCH /api/categories/{id}/`, `GET/POST /api/units/`, `GET/PATCH /api/units/{id}/`, `GET/POST /api/products/`, `GET/PATCH /api/products/{id}/` |
-| Inventory reads | `GET /api/stock-levels/`, `GET /api/stock-movements/` |
-| Inventory actions | `POST /api/inventory/stock-in/`, `POST /api/inventory/stock-out/`, `POST /api/inventory/adjust/`, `POST /api/inventory/transfer/` |
-| Audit | `GET /api/audit-logs/`, `GET /api/audit-logs/{id}/` |
-| Dashboard | `GET /api/dashboard/summary/`, `GET /api/dashboard/low-stock/`, `GET /api/dashboard/inventory-by-warehouse/`, `GET /api/dashboard/recent-movements/` |
-
-## Query Features
-
-List APIs use page-number pagination:
-
-```text
-GET /api/products/?page=1&page_size=20
-```
-
-Defaults:
-
-- Default `page_size`: `20`
-- Maximum `page_size`: `100`
-- Response shape: `count`, `next`, `previous`, `results`
-
-Common query parameters:
-
-- Products: `category`, `unit`, `is_active`, `search`, `ordering`
-- Warehouses: `status`, `search`, `ordering`
-- Locations: `warehouse`, `status`, `location_type`, `search`, `ordering`
-- Stock levels: `product`, `warehouse`, `location`, `search`, `ordering`
-- Stock movements: `movement_type`, `product`, `warehouse`, `location`, `created_at_after`, `created_at_before`, `search`, `ordering`
-- Audit logs: `action`, `resource_type`, `resource_id`, `actor`, `created_at_after`, `created_at_before`, `search`, `ordering`
-
-Tenant scoping happens before filtering, search, ordering, and pagination.
-
-## Inventory Rules
-
-- Stock quantities use decimal values with three decimal places.
-- `stock_in` increases one stock level and creates a stock movement.
-- `stock_out` decreases one stock level and cannot make stock negative.
-- `adjust` sets stock to a counted quantity and records the difference.
-- `transfer` decreases source stock and increases destination stock in one transaction.
-- Transfers create `transfer_out` and `transfer_in` movement records with the same `transfer_batch_id`.
-- Stock levels are read-only through public APIs.
-- Stock movements are append-only through public APIs.
-- Inactive products, warehouses, and locations cannot be used in new stock operations.
-- Every successful stock mutation creates audit logs.
-
-## Example API Flows
-
-See [docs/api-examples.md](docs/api-examples.md) for cURL examples covering registration, workspace creation, tenant setup, stock operations, dashboard reads, filtering, and audit logs.
-
-## Additional Docs
-
-- [docs/architecture.md](docs/architecture.md): full architecture source of truth.
-- [docs/architecture-summary.md](docs/architecture-summary.md): concise architecture notes and diagrams.
-- [docs/api-examples.md](docs/api-examples.md): example API requests.
-- [docs/portfolio-summary.md](docs/portfolio-summary.md): resume bullets, demo script, and screenshot checklist.
-
-## Testing
-
-The test suite uses `pytest` and `pytest-django` with `config.settings.test`.
-
-```powershell
-docker compose run --rm backend pytest
-```
-
-The suite covers authentication, tenancy, role permissions, invites, warehouse/catalog setup, inventory stock operations, transaction rollback, audit logs, dashboard tenant scoping, query features, and API docs smoke tests.
-
-## Portfolio Highlights
-
-- Designed and implemented subdomain-based multi-tenancy on a shared PostgreSQL schema.
-- Enforced tenant isolation with middleware, membership validation, role permissions, and tenant-scoped querysets.
-- Built transaction-safe inventory workflows with append-only stock movement history.
-- Added audit logging for important workspace, setup, and stock mutation events.
-- Exposed a documented REST API with Swagger/OpenAPI and pagination/filter/search/order support.
-- Covered high-risk business rules with automated pytest tests running inside Docker.
-- Built a role-aware Next.js SaaS dashboard with a BFF layer that keeps JWTs out of browser storage.
-
-## Post-MVP Roadmap
-
-Reasonable future improvements:
-
-- Seed/demo data command.
-- Swagger screenshots or demo GIFs for the repository.
-- Supplier/customer modules.
-- Receiving and dispatch workflows.
-- CSV/PDF exports.
-- Email notifications.
-- Advanced reporting.
-- Billing/Stripe integration.
-- More advanced tenant isolation strategies for enterprise scenarios.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).

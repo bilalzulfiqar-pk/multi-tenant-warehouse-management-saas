@@ -1,6 +1,6 @@
 # Architecture Summary
 
-This document summarizes the implemented MVP architecture. The detailed source of truth remains `docs/architecture.md`.
+This document summarizes the implemented architecture that now includes the Next.js frontend. The original detailed planning source remains local, while this document reflects the public codebase as it exists today.
 
 ## System Shape
 
@@ -8,7 +8,12 @@ The project is a backend-first Django REST Framework SaaS-style API. Users are g
 
 ```mermaid
 flowchart TB
-    Client["API client or Swagger"] --> Django["Django + DRF"]
+    Browser["Browser"] --> Next["Next.js frontend + BFF"]
+    Swagger["Swagger / API client"] --> Django["Django + DRF"]
+    Next --> Global["Global API routes"]
+    Next --> TenantApi["Tenant API routes"]
+    Global --> Django
+    TenantApi --> Django
     Django --> Auth["SimpleJWT authentication"]
     Django --> Tenant["TenantMiddleware"]
     Tenant --> Workspace["Workspace resolved by subdomain"]
@@ -29,13 +34,15 @@ flowchart TB
 
 ```mermaid
 sequenceDiagram
-    participant Client
+    participant Browser
+    participant Next as Next.js BFF
     participant Middleware as TenantMiddleware
     participant View as DRF View
     participant Permission as Permissions
     participant DB as PostgreSQL
 
-    Client->>Middleware: GET acme.localhost:8000/api/products/
+    Browser->>Next: GET /api/tenant/products
+    Next->>Middleware: Forward to acme.localhost:8000/api/products/
     Middleware->>DB: Find active workspace by subdomain acme
     DB-->>Middleware: Workspace
     Middleware->>View: Attach request.workspace
@@ -44,7 +51,8 @@ sequenceDiagram
     DB-->>Permission: Membership
     View->>DB: Query products filtered by workspace
     DB-->>View: Tenant-scoped results
-    View-->>Client: Paginated JSON
+    View-->>Next: Paginated JSON
+    Next-->>Browser: UI-ready response
 ```
 
 ## Domain Apps
@@ -117,6 +125,13 @@ flowchart LR
 ```
 
 Rollback scenarios covered by tests include insufficient stock, failed transfer, and audit-log failure during stock mutation.
+
+## Frontend Notes
+
+- The frontend uses Next.js route handlers as a BFF layer.
+- JWT tokens stay in HttpOnly cookies rather than browser local storage.
+- Workspace switching changes both frontend routing and tenant API host context.
+- Django still enforces tenant isolation, membership checks, and role permissions on every protected request.
 
 ## API Quality
 

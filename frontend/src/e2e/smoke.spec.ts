@@ -257,10 +257,10 @@ test("owner can create a workspace, run inventory workflows, and see audit logs"
   await page.goto("/audit-logs");
   await expect(page.getByRole("heading", { name: "Audit Logs" })).toBeVisible();
   await page.getByPlaceholder("Search action, resource, message, or actor").fill("stock");
-  await expect(page.getByText("stock.stock_in").first()).toBeVisible();
-  await expect(page.getByText("stock.stock_out").first()).toBeVisible();
-  await expect(page.getByText("stock.adjusted").first()).toBeVisible();
-  await expect(page.getByText("stock.transferred").first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "stock.stock_in", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "stock.stock_out", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "stock.adjusted", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: "stock.transferred", exact: true }).first()).toBeVisible();
 });
 
 test("workspace switching moves to the selected tenant subdomain", async ({ page }) => {
@@ -323,14 +323,15 @@ test.describe("mobile responsiveness", () => {
     await expect(banner.getByRole("button", { name: "Open menu" })).toBeVisible();
 
     await banner.getByRole("button", { name: "Open menu" }).click();
-    await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Products" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Stock Levels" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
-    await expect(page.getByText("Utilities")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Workspaces" })).toBeVisible();
+    const mobileMenu = page.getByRole("dialog");
+    await expect(mobileMenu.getByRole("link", { name: "Dashboard" })).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Products" })).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Stock Levels" })).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Team" })).toBeVisible();
+    await expect(mobileMenu.getByText("Utilities")).toBeVisible();
+    await expect(mobileMenu.getByRole("button", { name: "Sign out" })).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Workspaces" })).toBeVisible();
     await page.getByRole("button", { name: "Close" }).click();
 
     await page.goto("/dashboard");
@@ -351,9 +352,10 @@ test.describe("mobile responsiveness", () => {
     await expect(page.getByRole("tab", { name: /Stock In/ })).toBeVisible();
 
     await banner.getByRole("button", { name: "Open menu" }).click();
-    await expect(page.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
-    await page.getByRole("link", { name: "Team" }).click();
+    const mobileMenuAgain = page.getByRole("dialog");
+    await expect(mobileMenuAgain.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
+    await expect(mobileMenuAgain.getByRole("link", { name: "Team" })).toBeVisible();
+    await mobileMenuAgain.getByRole("link", { name: "Team" }).click();
     await expect(page.getByRole("heading", { name: "Team" })).toBeVisible();
 
     await page.goto("/workspaces");
