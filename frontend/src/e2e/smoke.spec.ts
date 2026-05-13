@@ -309,6 +309,17 @@ test.describe("mobile responsiveness", () => {
     const setup = await createSetupData(page, suffix);
     const mobileNav = page.getByRole("banner").getByRole("navigation");
 
+    await appRequest(page, "/api/tenant/inventory/stock-in", {
+      method: "POST",
+      body: {
+        product: setup.product.id,
+        warehouse: setup.warehouse.id,
+        location: setup.location.id,
+        quantity: "12.000",
+        reason: "Playwright mobile stock in",
+      },
+    });
+
     await expect(mobileNav.getByRole("link", { name: "Dashboard" })).toBeVisible();
     await expect(mobileNav.getByRole("link", { name: "Products" })).toBeVisible();
     await expect(mobileNav.getByRole("link", { name: "Stock Levels" })).toBeVisible();
