@@ -412,7 +412,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <header className="sticky top-0 z-30 border-b bg-white/95 backdrop-blur">
           <div className="lg:hidden">
-            <div className="flex min-h-15 items-start justify-between gap-3 px-4 py-3">
+            <div className="flex min-h-15 items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-semibold text-slate-950">

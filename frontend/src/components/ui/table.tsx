@@ -14,6 +14,7 @@ export function TableHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLTableSectionElement>) {
+  // return <thead className={cn("bg-slate-100", className)} {...props} />;
   return <thead className={cn("bg-slate-50", className)} {...props} />;
 }
 
@@ -41,6 +42,7 @@ export function TableHead({
     <th
       className={cn(
         "h-10 px-3 text-left align-middle text-xs font-semibold uppercase text-slate-500",
+        // "h-10 px-3 text-left align-middle text-xs font-semibold uppercase text-slate-600",
         className,
       )}
       {...props}

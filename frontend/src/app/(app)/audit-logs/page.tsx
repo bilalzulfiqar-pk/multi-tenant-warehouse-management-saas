@@ -97,7 +97,7 @@ export default function AuditLogsPage() {
                 <MobileDataField
                   label="Metadata"
                   value={
-                    <code className="line-clamp-3 text-xs text-slate-500">
+                    <code className="block max-w-full overflow-hidden break-all whitespace-normal line-clamp-3 text-xs text-slate-500">
                       {JSON.stringify(log.metadata)}
                     </code>
                   }
@@ -145,7 +145,7 @@ export default function AuditLogsPage() {
                   </TableCell>
                   <TableCell>{log.message || "-"}</TableCell>
                   <TableCell>
-                    <code className="line-clamp-2 text-xs text-slate-500">
+                    <code className="block max-w-full overflow-hidden break-all whitespace-normal line-clamp-2 text-xs text-slate-500">
                       {JSON.stringify(log.metadata)}
                     </code>
                   </TableCell>
