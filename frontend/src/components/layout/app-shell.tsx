@@ -69,7 +69,6 @@ const mobilePrimaryNav = new Set([
   "/dashboard",
   "/products",
   "/stock-levels",
-  "/inventory-actions",
 ]);
 
 const sidebarLabelTransition =
@@ -92,6 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     Workspace,
     "name" | "subdomain"
   > | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const currentHost = typeof window !== "undefined" ? window.location.host : "";
   const switchingBetweenTenants =
     typeof window !== "undefined" &&
@@ -169,6 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    setMobileMenuOpen(false);
     window.sessionStorage.setItem("wms_workspace_switching", "true");
     setWorkspaceTransition({
       name: workspace.name,
@@ -184,6 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
+    setMobileMenuOpen(false);
     try {
       await apiRequest("/api/auth/logout", { method: "POST" });
     } finally {
@@ -237,10 +239,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   });
   const mobilePrimaryItems = visibleItems.filter((item) => mobilePrimaryNav.has(item.href));
   const mobileOverflowItems = visibleItems.filter((item) => !mobilePrimaryNav.has(item.href));
-  const moreActive = mobileOverflowItems.some(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <WorkspaceTransitionOverlay workspace={workspaceTransition} />
@@ -337,7 +335,187 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <header className="sticky top-0 z-30 border-b bg-white/95 backdrop-blur">
-          <div className="flex min-h-16 flex-col gap-3 px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-6">
+          <div className="lg:hidden">
+            <div className="flex min-h-15 items-start justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-slate-950">
+                    {session.workspace?.name || "No workspace selected"}
+                  </p>
+                  {role ? (
+                    <span className="inline-flex items-start gap-0.5">
+                      <Badge variant="navy">{ROLE_LABELS[role]}</Badge>
+                      {help ? (
+                        <TooltipProvider delayDuration={120} disableHoverableContent>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                aria-label="Role permissions"
+                                className="mt-[-1px] inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+                                type="button"
+                              >
+                                <span className="-mt-px font-serif text-[11px] font-semibold italic leading-none">
+                                  i
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" align="center">
+                              {help}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : null}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    aria-label="Open menu"
+                    className="h-9 w-9 shrink-0"
+                    size="icon"
+                    variant="outline"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right">
+                  <SheetHeader>
+                    <SheetTitle>{session.workspace?.name || "Menu"}</SheetTitle>
+                    <SheetDescription>
+                      {session.workspace
+                        ? currentHost
+                          ? buildTenantHost(session.workspace.subdomain, currentHost)
+                          : session.workspace.subdomain
+                        : "Create or select a workspace to continue"}
+                    </SheetDescription>
+                  </SheetHeader>
+
+                  <div className="border-t pt-4 sm:hidden">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                      Pages
+                    </p>
+                    <div className="space-y-1">
+                      {visibleItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                        return (
+                          <SheetClose asChild key={item.href}>
+                            <Link
+                              href={item.href}
+                              className={cn(
+                                "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
+                                active && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
+                              )}
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              {item.label}
+                            </Link>
+                          </SheetClose>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {mobileOverflowItems.length ? (
+                    <div className="hidden border-t pt-4 sm:block lg:hidden">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                        Pages
+                      </p>
+                      <div className="space-y-1">
+                        {mobileOverflowItems.map((item) => {
+                          const Icon = item.icon;
+                          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                          return (
+                            <SheetClose asChild key={item.href}>
+                              <Link
+                                href={item.href}
+                                className={cn(
+                                  "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
+                                  active && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
+                                )}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                {item.label}
+                              </Link>
+                            </SheetClose>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="mt-5 border-t pt-4">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                      Workspace
+                    </p>
+                    <NativeSelect
+                      className="w-full"
+                      placeholder="Select workspace"
+                      value={session.workspace?.subdomain || ""}
+                      onChange={(event) => {
+                        const workspace = session.workspaces.find(
+                          (item) => item.subdomain === event.target.value,
+                        );
+                        if (workspace) {
+                          selectWorkspace(workspace);
+                        }
+                      }}
+                      disabled={switchWorkspace.isPending}
+                    >
+                      {session.workspaces.map((workspace) => (
+                        <option key={workspace.id} value={workspace.subdomain}>
+                          {workspace.name}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+
+                  <div className="mt-5 border-t pt-4">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                      Utilities
+                    </p>
+                    <div className="space-y-2">
+                      <SheetClose asChild>
+                        <Button className="w-full justify-start" variant="outline" asChild>
+                          <Link href="/workspaces">Workspaces</Link>
+                        </Button>
+                      </SheetClose>
+                      <Button className="w-full justify-start" variant="ghost" onClick={logout}>
+                        <LogOut className="h-4 w-4" />
+                        Sign out
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <nav className="hidden border-t px-4 py-2 sm:block lg:hidden">
+              <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {mobilePrimaryItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium text-slate-600",
+                        active && "bg-slate-950 text-white",
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          </div>
+
+          <div className="hidden min-h-16 flex-col gap-3 px-4 py-3 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:justify-between lg:px-6">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="truncate text-sm font-semibold text-slate-950">
@@ -409,69 +587,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
-          <nav className="border-t px-4 py-2 lg:hidden">
-            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {mobilePrimaryItems.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-slate-600",
-                    active && "bg-slate-950 text-white",
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {item.label}
-                </Link>
-              );
-            })}
-            {mobileOverflowItems.length ? (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    variant={moreActive ? "default" : "outline"}
-                    className="h-8 shrink-0 px-3 text-xs"
-                  >
-                    <Menu className="h-3.5 w-3.5" />
-                    More
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right">
-                  <SheetHeader>
-                    <SheetTitle>More pages</SheetTitle>
-                    <SheetDescription>
-                      Open less-frequent workspace views without crowding the mobile nav.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="mt-2 space-y-1">
-                    {mobileOverflowItems.map((item) => {
-                      const Icon = item.icon;
-                      const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                      return (
-                        <SheetClose asChild key={item.href}>
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={cn(
-                            "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
-                            active && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
-                          )}
-                        >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          {item.label}
-                        </Link>
-                        </SheetClose>
-                      );
-                    })}
-                  </div>
-                </SheetContent>
-              </Sheet>
-            ) : null}
-            </div>
-          </nav>
         </header>
         <main className="px-4 py-5 lg:px-6">
           <div key={pathname} className="motion-page">

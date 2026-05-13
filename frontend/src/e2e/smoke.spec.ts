@@ -307,7 +307,7 @@ test.describe("mobile responsiveness", () => {
     test.setTimeout(120_000);
     const { suffix } = await registerAndCreateWorkspace(page);
     const setup = await createSetupData(page, suffix);
-    const mobileNav = page.getByRole("banner").getByRole("navigation");
+    const banner = page.getByRole("banner");
 
     await appRequest(page, "/api/tenant/inventory/stock-in", {
       method: "POST",
@@ -320,11 +320,18 @@ test.describe("mobile responsiveness", () => {
       },
     });
 
-    await expect(mobileNav.getByRole("link", { name: "Dashboard" })).toBeVisible();
-    await expect(mobileNav.getByRole("link", { name: "Products" })).toBeVisible();
-    await expect(mobileNav.getByRole("link", { name: "Stock Levels" })).toBeVisible();
-    await expect(mobileNav.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
-    await expect(mobileNav.getByRole("button", { name: /More/ })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Open menu" })).toBeVisible();
+
+    await banner.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Products" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Stock Levels" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
+    await expect(page.getByText("Utilities")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Workspaces" })).toBeVisible();
+    await page.getByRole("button", { name: "Close" }).click();
 
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -343,7 +350,8 @@ test.describe("mobile responsiveness", () => {
     await expect(page.getByRole("heading", { name: "Inventory Actions" })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Stock In/ })).toBeVisible();
 
-    await mobileNav.getByRole("button", { name: /More/ }).click();
+    await banner.getByRole("button", { name: "Open menu" }).click();
+    await expect(page.getByRole("link", { name: "Inventory Actions" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Team" })).toBeVisible();
     await page.getByRole("link", { name: "Team" }).click();
     await expect(page.getByRole("heading", { name: "Team" })).toBeVisible();
