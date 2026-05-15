@@ -225,3 +225,21 @@ export type Session = {
   workspace: Workspace | null;
   workspaces: Workspace[];
 };
+
+export type InviteAcceptanceStatus =
+  | "pending"
+  | "accepted"
+  | "expired"
+  | "cancelled"
+  | "invalid"
+  | "wrong_email"
+  | "already_member";
+
+export type InviteAcceptancePreview = {
+  status: InviteAcceptanceStatus;
+  can_accept: boolean;
+  message: string;
+  email?: string;
+  role?: Exclude<WorkspaceRole, "owner">;
+  expires_at?: string;
+};

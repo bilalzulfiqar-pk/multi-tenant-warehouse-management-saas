@@ -256,6 +256,86 @@ class WorkspaceInviteService:
         return membership
 
     @staticmethod
+    def get_invite_acceptance_status(workspace, token, user):
+        try:
+            invite = WorkspaceInvite.objects.get(token=token)
+        except WorkspaceInvite.DoesNotExist:
+            return {
+                "status": "invalid",
+                "can_accept": False,
+                "message": "Invite token is invalid.",
+            }
+
+        if invite.workspace_id != workspace.id:
+            return {
+                "status": "invalid",
+                "can_accept": False,
+                "message": "Invite token is invalid for this workspace.",
+            }
+
+        if invite.status == InviteStatus.CANCELLED:
+            return {
+                "status": InviteStatus.CANCELLED,
+                "can_accept": False,
+                "message": "This invite has been cancelled.",
+                "email": invite.email,
+                "role": invite.role,
+                "expires_at": invite.expires_at,
+            }
+
+        if invite.status == InviteStatus.ACCEPTED:
+            return {
+                "status": InviteStatus.ACCEPTED,
+                "can_accept": False,
+                "message": "This invite has already been accepted.",
+                "email": invite.email,
+                "role": invite.role,
+                "expires_at": invite.expires_at,
+            }
+
+        if invite.expires_at <= timezone.now():
+            if invite.status != InviteStatus.EXPIRED:
+                invite.status = InviteStatus.EXPIRED
+                invite.save(update_fields=["status", "updated_at"])
+            return {
+                "status": InviteStatus.EXPIRED,
+                "can_accept": False,
+                "message": "This invite has expired.",
+                "email": invite.email,
+                "role": invite.role,
+                "expires_at": invite.expires_at,
+            }
+
+        if invite.email.lower() != user.email.lower():
+            return {
+                "status": "wrong_email",
+                "can_accept": False,
+                "message": "Sign in with the invited email address to accept this invite.",
+                "email": invite.email,
+                "role": invite.role,
+                "expires_at": invite.expires_at,
+            }
+
+        if WorkspaceMembership.objects.filter(workspace=workspace, user=user).exists():
+            return {
+                "status": "already_member",
+                "can_accept": False,
+                "message": "You are already a member of this workspace.",
+                "email": invite.email,
+                "role": invite.role,
+                "expires_at": invite.expires_at,
+            }
+
+        return {
+            "status": InviteStatus.PENDING,
+            "can_accept": True,
+            "message": "This invite is ready to be accepted.",
+            "email": invite.email,
+            "role": invite.role,
+            "expires_at": invite.expires_at,
+        }
+
+    @staticmethod
     @transaction.atomic
     def cancel_invite(invite):
         if invite.status != InviteStatus.PENDING:

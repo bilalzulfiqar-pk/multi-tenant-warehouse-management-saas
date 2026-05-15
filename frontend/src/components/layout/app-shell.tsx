@@ -311,13 +311,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const hostSubdomain = currentHost ? getTenantSubdomainFromHost(currentHost) : null;
+  const hostNeedsTenantRedirect =
+    Boolean(session.workspace) &&
+    pathname !== "/workspaces" &&
+    hostSubdomain !== session.workspace?.subdomain;
   const redirectingFromUnavailableTenant =
     !session.workspace &&
     pathname !== "/accept-invite" &&
     (Boolean(hostSubdomain) || pathname !== "/workspaces");
 
-  if (redirectingFromUnavailableTenant) {
-    return <WorkspaceLoadingScreen />;
+  if (hostNeedsTenantRedirect || redirectingFromUnavailableTenant) {
+    return <TenantSwitchBlankScreen />;
   }
 
   const tabletVisibleItems =

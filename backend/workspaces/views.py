@@ -162,8 +162,17 @@ class WorkspaceInviteViewSet(viewsets.ModelViewSet):
         invite = WorkspaceInviteService.cancel_invite(self.get_object())
         return Response(self.get_serializer(invite).data)
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["get", "post"])
     def accept(self, request):
+        if request.method.lower() == "get":
+            token = request.query_params.get("token", "").strip()
+            return Response(
+                WorkspaceInviteService.get_invite_acceptance_status(
+                    workspace=request.workspace,
+                    token=token,
+                    user=request.user,
+                )
+            )
         serializer = InviteAcceptSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         membership = serializer.save()

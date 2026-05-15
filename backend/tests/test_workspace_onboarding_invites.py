@@ -428,3 +428,68 @@ def test_owner_can_cancel_pending_invite(django_user_model):
 
     assert response.status_code == 200
     assert response.data["status"] == InviteStatus.CANCELLED
+
+
+def test_invite_accept_status_reports_pending_for_matching_user(django_user_model):
+    owner = create_user(django_user_model, "owner@example.com")
+    invited_user = create_user(django_user_model, "invited@example.com")
+    workspace = create_workspace(owner)
+    invite = WorkspaceInvite.objects.create(
+        workspace=workspace,
+        email=invited_user.email,
+        role=WorkspaceRole.MANAGER,
+        invited_by=owner,
+    )
+
+    response = api_client(invited_user).get(
+        f"/api/invites/accept/?token={invite.token}",
+        HTTP_HOST=tenant_host(workspace),
+    )
+
+    assert response.status_code == 200
+    assert response.data["status"] == InviteStatus.PENDING
+    assert response.data["can_accept"] is True
+    assert response.data["email"] == invited_user.email
+
+
+def test_invite_accept_status_reports_cancelled_invite(django_user_model):
+    owner = create_user(django_user_model, "owner@example.com")
+    invited_user = create_user(django_user_model, "invited@example.com")
+    workspace = create_workspace(owner)
+    invite = WorkspaceInvite.objects.create(
+        workspace=workspace,
+        email=invited_user.email,
+        role=WorkspaceRole.STAFF,
+        invited_by=owner,
+        status=InviteStatus.CANCELLED,
+    )
+
+    response = api_client(invited_user).get(
+        f"/api/invites/accept/?token={invite.token}",
+        HTTP_HOST=tenant_host(workspace),
+    )
+
+    assert response.status_code == 200
+    assert response.data["status"] == InviteStatus.CANCELLED
+    assert response.data["can_accept"] is False
+
+
+def test_invite_accept_status_reports_wrong_email(django_user_model):
+    owner = create_user(django_user_model, "owner@example.com")
+    wrong_user = create_user(django_user_model, "wrong@example.com")
+    workspace = create_workspace(owner)
+    invite = WorkspaceInvite.objects.create(
+        workspace=workspace,
+        email="invited@example.com",
+        role=WorkspaceRole.STAFF,
+        invited_by=owner,
+    )
+
+    response = api_client(wrong_user).get(
+        f"/api/invites/accept/?token={invite.token}",
+        HTTP_HOST=tenant_host(workspace),
+    )
+
+    assert response.status_code == 200
+    assert response.data["status"] == "wrong_email"
+    assert response.data["can_accept"] is False
