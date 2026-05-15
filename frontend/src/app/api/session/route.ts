@@ -28,6 +28,10 @@ export async function GET(request: Request) {
   const selectedSubdomain = hostSubdomain || cookieSubdomain;
 
   if (!accessToken) {
+    accessToken = (await refreshAccessToken()) || undefined;
+  }
+
+  if (!accessToken) {
     return NextResponse.json<Session>({
       user: null,
       workspace: null,

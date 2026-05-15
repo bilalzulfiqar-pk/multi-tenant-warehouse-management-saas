@@ -1,12 +1,12 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AuthCard } from "@/components/auth/auth-card";
+import { AuthFlowLoadingScreen } from "@/components/auth/auth-flow-loading-screen";
 import { Field } from "@/components/domain/field";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -132,12 +132,22 @@ function AcceptInvitePageContent() {
 
   if (sessionQuery.isLoading || !sessionQuery.data?.user) {
     return (
-      <InviteRouteLoadingScreen
+      <AuthFlowLoadingScreen
+        title="Preparing invite"
         message={
           sessionQuery.isLoading
             ? "Checking your session and invite access..."
             : "Redirecting you to sign in..."
         }
+      />
+    );
+  }
+
+  if (previewLoading) {
+    return (
+      <AuthFlowLoadingScreen
+        title="Preparing invite"
+        message="Checking invite status..."
       />
     );
   }
@@ -149,11 +159,7 @@ function AcceptInvitePageContent() {
       footer="Invites can only be accepted by the invited email address."
     >
       <div className="space-y-4">
-        {previewLoading ? (
-          <div className="rounded-md border bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            Checking invite status...
-          </div>
-        ) : preview && !preview.can_accept ? (
+        {preview && !preview.can_accept ? (
           <>
             <Alert>{preview.message}</Alert>
             {preview.email ? (
@@ -192,23 +198,5 @@ function AcceptInvitePageContent() {
         )}
       </div>
     </AuthCard>
-  );
-}
-
-function InviteRouteLoadingScreen({ message }: { message: string }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
-      <div className="motion-page w-full max-w-sm rounded-lg border bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-950">Preparing invite</p>
-            <p className="mt-1 text-sm text-slate-500">{message}</p>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
