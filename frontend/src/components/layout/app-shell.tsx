@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -205,6 +205,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
+  function requireWorkspaceForNavigation(event: MouseEvent<HTMLElement>) {
+    if (session?.workspace) {
+      return;
+    }
+
+    event.preventDefault();
+    setMobileMenuOpen(false);
+    toast.info("Select or create a workspace first to open workspace pages.");
+  }
+
   const visibleItems = navItems.filter((item) => {
     if (item.href === "/audit-logs") {
       return canViewAuditLogs(role);
@@ -352,6 +362,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(event) => requireWorkspaceForNavigation(event)}
                 className={cn(
                   "mx-3 grid h-10 grid-cols-[3.5rem_minmax(0,1fr)] items-center rounded-md text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white",
                   active && "bg-white/10 text-white",
@@ -481,6 +492,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             <SheetClose asChild key={item.href}>
                               <Link
                                 href={item.href}
+                                onClick={(event) => requireWorkspaceForNavigation(event)}
                                 className={cn(
                                   "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950",
                                   active && "bg-slate-950 text-white hover:bg-slate-950 hover:text-white",
@@ -565,6 +577,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={(event) => requireWorkspaceForNavigation(event)}
                       className={cn(
                         "flex basis-auto grow items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-slate-600",
                         active && "bg-slate-950 text-white",

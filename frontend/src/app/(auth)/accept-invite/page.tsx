@@ -1,17 +1,17 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { AuthCard } from "@/components/auth/auth-card";
 import { Field } from "@/components/domain/field";
-import { PageHeader } from "@/components/layout/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { tenantApi, jsonBody } from "@/lib/api-client";
+import { useSession } from "@/hooks/use-session";
 
 export default function AcceptInvitePage() {
   return (
@@ -23,9 +23,23 @@ export default function AcceptInvitePage() {
 
 function AcceptInvitePageContent() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const params = useSearchParams();
+  const sessionQuery = useSession();
   const [token, setToken] = useState(params.get("token") || "");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (sessionQuery.isLoading || sessionQuery.data?.user) {
+      return;
+    }
+
+    const next =
+      typeof window !== "undefined"
+        ? `${window.location.pathname}${window.location.search}`
+        : "/accept-invite";
+    router.replace(`/login?next=${encodeURIComponent(next)}`);
+  }, [router, sessionQuery.data?.user, sessionQuery.isLoading]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,20 +61,21 @@ function AcceptInvitePageContent() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Accept invite"
-        description="Review and accept this tenant workspace invite."
-      />
-      <Alert className="mb-4">
-        Use an account with the invited email address. This invite will add you to the current tenant workspace.
-      </Alert>
-      <Card className="w-full max-w-xl">
-        <CardHeader>
-          <CardTitle>Invite token</CardTitle>
-          <CardDescription>Paste the token from the invite link.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthCard
+      title="Accept invite"
+      description="Join this workspace using the invited email address."
+      footer="Invites can only be accepted by the invited email address."
+    >
+      <div className="space-y-4">
+        <Alert>
+          Sign in with the invited email address, then confirm the invite to join this workspace.
+        </Alert>
+
+        {sessionQuery.isLoading || !sessionQuery.data?.user ? (
+          <div className="rounded-md border bg-slate-50 px-4 py-3 text-sm text-slate-500">
+            Checking your session...
+          </div>
+        ) : (
           <form className="grid gap-4" onSubmit={submit}>
             <Field label="Token">
               <Input value={token} onChange={(event) => setToken(event.target.value)} required />
@@ -69,8 +84,8 @@ function AcceptInvitePageContent() {
               Accept invite
             </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </div>
+    </AuthCard>
   );
 }
