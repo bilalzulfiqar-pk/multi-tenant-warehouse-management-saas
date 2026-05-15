@@ -34,6 +34,8 @@ export default function TeamPage() {
   const members = useTenantArray<Membership>("members", "members", canManage);
   const invites = useTenantArray<Invite>("invites", "invites", canManage);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteLinkOpen, setInviteLinkOpen] = useState(false);
+  const [selectedInviteLink, setSelectedInviteLink] = useState("");
   const [memberEdit, setMemberEdit] = useState<Membership | null>(null);
 
   async function refresh() {
@@ -100,6 +102,45 @@ export default function TeamPage() {
       url.searchParams.set("token", token);
     }
     return url.toString();
+  }
+
+  function fallbackCopyText(text: string) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    textArea.style.pointerEvents = "none";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return copied;
+  }
+
+  async function copyInviteLink(text: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else if (!fallbackCopyText(text)) {
+        throw new Error("Clipboard API unavailable");
+      }
+      toast.success("Invite link copied");
+      return true;
+    } catch {
+      if (fallbackCopyText(text)) {
+        toast.success("Invite link copied");
+        return true;
+      }
+      toast.error("Could not copy automatically. Copy it manually from the dialog.");
+      return false;
+    }
+  }
+
+  function showInviteLink(invite: Invite) {
+    setSelectedInviteLink(frontendInviteLink(invite));
+    setInviteLinkOpen(true);
   }
 
   if (!canManage) {
@@ -282,10 +323,7 @@ export default function TeamPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          navigator.clipboard.writeText(frontendInviteLink(invite));
-                          toast.success("Invite link copied");
-                        }}
+                        onClick={() => showInviteLink(invite)}
                       >
                         <Copy className="h-4 w-4" />
                         Copy link
@@ -348,10 +386,7 @@ export default function TeamPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              navigator.clipboard.writeText(frontendInviteLink(invite));
-                              toast.success("Invite link copied");
-                            }}
+                            onClick={() => showInviteLink(invite)}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -392,6 +427,36 @@ export default function TeamPage() {
             </Field>
             <Button className="w-full sm:w-auto" type="submit">Create invite</Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inviteLinkOpen} onOpenChange={setInviteLinkOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Invite link</DialogTitle></DialogHeader>
+          <div className="grid gap-4">
+            <p className="text-sm text-slate-600">
+              Share this link with the invited user. The invited user can sign in with the invited email address and join this workspace from the invite page.
+            </p>
+            <Field label="Link">
+              <Input
+                readOnly
+                value={selectedInviteLink}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+            </Field>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                onClick={async () => {
+                  if (selectedInviteLink) {
+                    await copyInviteLink(selectedInviteLink);
+                  }
+                }}
+              >
+                Copy link
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
