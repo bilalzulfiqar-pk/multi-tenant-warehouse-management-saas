@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -34,16 +34,13 @@ export function useRequireSession(initialData?: Session) {
 }
 
 export function useWorkspaceSwitcher() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (workspace: Workspace) =>
       apiRequest<{ ok: boolean; redirect_url?: string }>("/api/session/workspace", {
         method: "POST",
         body: jsonBody({ subdomain: workspace.subdomain }),
       }),
-    onSuccess: async (data, workspace) => {
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
-      await queryClient.invalidateQueries({ queryKey: ["tenant"] });
+    onSuccess: (data, workspace) => {
       window.location.assign(data.redirect_url || buildTenantUrl(workspace.subdomain, window.location.href));
     },
   });

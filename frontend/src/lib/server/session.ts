@@ -98,11 +98,6 @@ export async function getServerSession(host: string | null): Promise<Session> {
   return { user, workspace, workspaces };
 }
 
-export async function getServerAuthenticatedUser() {
-  const session = await getServerSession(null);
-  return session.user;
-}
-
 export function requestUrlFromHost(host: string | null, forwardedProto: string | null, path = "/") {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${forwardedProto || "http"}://${host || "localhost:3000"}${normalizedPath}`;

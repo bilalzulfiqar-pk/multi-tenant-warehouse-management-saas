@@ -1,10 +1,10 @@
 "use client";
 
 import { Building2, ExternalLink, Plus } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { WorkspaceTransitionOverlay } from "@/components/layout/workspace-transition-overlay";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,20 +18,39 @@ import { compactUrlHost } from "@/lib/utils";
 import { useSession } from "@/hooks/use-session";
 
 export default function WorkspacesPage() {
-  const queryClient = useQueryClient();
   const sessionQuery = useSession();
   const [subdomain, setSubdomain] = useState("");
   const [loading, setLoading] = useState(false);
+  const [switchingWorkspace, setSwitchingWorkspace] = useState<Pick<
+    Workspace,
+    "name" | "subdomain"
+  > | null>(null);
   const workspaces = sessionQuery.data?.workspaces || [];
 
   async function selectWorkspace(workspace: Workspace) {
-    await apiRequest("/api/session/workspace", {
-      method: "POST",
-      body: jsonBody({ subdomain: workspace.subdomain }),
+    if (switchingWorkspace) {
+      return;
+    }
+
+    setSwitchingWorkspace({
+      name: workspace.name,
+      subdomain: workspace.subdomain,
     });
-    await queryClient.invalidateQueries({ queryKey: ["session"] });
-    await queryClient.invalidateQueries({ queryKey: ["tenant"] });
-    window.location.assign(buildTenantUrl(workspace.subdomain, window.location.href));
+    window.sessionStorage.setItem("wms_workspace_switching", "true");
+
+    try {
+      const response = await apiRequest<{ ok: boolean; redirect_url?: string }>("/api/session/workspace", {
+        method: "POST",
+        body: jsonBody({ subdomain: workspace.subdomain }),
+      });
+      window.location.assign(
+        response.redirect_url || buildTenantUrl(workspace.subdomain, window.location.href),
+      );
+    } catch (error) {
+      window.sessionStorage.removeItem("wms_workspace_switching");
+      setSwitchingWorkspace(null);
+      throw error;
+    }
   }
 
   async function createWorkspace(event: React.FormEvent<HTMLFormElement>) {
@@ -57,6 +76,7 @@ export default function WorkspacesPage() {
 
   return (
     <div>
+      <WorkspaceTransitionOverlay workspace={switchingWorkspace} />
       <PageHeader
         title="Workspaces"
         description="Create or switch tenant workspaces. Tenant data is isolated by the selected subdomain."

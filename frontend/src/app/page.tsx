@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 
+import { EntryRedirectScreen } from "@/components/layout/entry-redirect-screen";
 import { authenticatedEntryUrl, getServerSession, requestUrlFromHost } from "@/lib/server/session";
 
 export default async function HomePage() {
@@ -11,5 +11,11 @@ export default async function HomePage() {
   );
   const session = await getServerSession(headerStore.get("host"));
 
-  redirect(session.user ? authenticatedEntryUrl(session, currentUrl) : "/login");
+  return (
+    <EntryRedirectScreen
+      target={session.user ? authenticatedEntryUrl(session, currentUrl) : "/login"}
+      title="Preparing workspace"
+      message="Checking your session and opening the right workspace..."
+    />
+  );
 }
