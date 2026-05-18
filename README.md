@@ -27,6 +27,26 @@ Full-stack warehouse management SaaS built with Django REST Framework and a tena
 - Responsive Next.js frontend with HttpOnly cookies, a BFF proxy layer, role-aware UI, and invite-driven team onboarding.
 - Swagger, OpenAPI schema, ReDoc, pytest coverage, and Dockerized local development.
 
+## Demo
+
+### Desktop Overview
+
+<p align="center">
+  <img src="docs/media/desktop-overview.gif" alt="Desktop overview demo" width="960" />
+</p>
+
+### Responsive Navigation
+
+<p align="center">
+  <img src="docs/media/responsive-navigation.gif" alt="Responsive navigation demo" width="760" />
+</p>
+
+### Screenshots
+
+| Tablet | Mobile |
+|---|---|
+| <img src="docs/media/screenshot-tablet.png" alt="Tablet screenshot" width="360" /> | <img src="docs/media/screenshot-mobile.png" alt="Mobile screenshot" width="240" /> |
+
 ## Architecture
 
 The frontend talks to Next.js route handlers first, not directly to Django. Those handlers forward requests to the correct Django API host, while Django remains the source of truth for tenancy, permissions, and inventory business rules.
