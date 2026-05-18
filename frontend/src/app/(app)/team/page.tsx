@@ -143,6 +143,10 @@ export default function TeamPage() {
     setInviteLinkOpen(true);
   }
 
+  function canCopyInviteLink(invite: Invite) {
+    return invite.status === "pending";
+  }
+
   if (!canManage) {
     return (
       <div>
@@ -320,14 +324,16 @@ export default function TeamPage() {
                   badge={<RoleBadge role={invite.role as WorkspaceRole} />}
                   actions={
                     <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => showInviteLink(invite)}
-                      >
-                        <Copy className="h-4 w-4" />
-                        Copy link
-                      </Button>
+                      {canCopyInviteLink(invite) ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => showInviteLink(invite)}
+                        >
+                          <Copy className="h-4 w-4" />
+                          Copy link
+                        </Button>
+                      ) : null}
                       {invite.status === "pending" ? (
                         <ConfirmAction
                           title="Cancel invite?"
@@ -383,13 +389,15 @@ export default function TeamPage() {
                     <TableCell className="text-right">
                       {canManage ? (
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => showInviteLink(invite)}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
+                          {canCopyInviteLink(invite) ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => showInviteLink(invite)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          ) : null}
                           {invite.status === "pending" ? (
                             <ConfirmAction
                               title="Cancel invite?"
