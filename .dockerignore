@@ -14,4 +14,4 @@ backend/test.sqlite3
 htmlcov/
 .coverage
 staticfiles/
-media/
+backend/media/
