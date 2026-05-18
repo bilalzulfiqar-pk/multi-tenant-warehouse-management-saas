@@ -12,19 +12,19 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green?logo=open-source-initiative&logoColor=white)
 
-Backend-first warehouse management SaaS built with Django REST Framework and a tenant-aware Next.js frontend. The project demonstrates shared-schema multi-tenancy, JWT authentication, workspace roles and invites, warehouse and catalog setup, transaction-safe inventory operations, audit logs, dashboard APIs, and a responsive operations UI.
+Full-stack warehouse management SaaS built with Django REST Framework and a tenant-aware Next.js frontend. The project demonstrates shared-schema multi-tenancy, JWT authentication, workspace roles and invites, warehouse and catalog setup, transaction-safe inventory operations, audit logs, dashboard APIs, and a responsive operations UI.
 
 ## What It Does
 
 - Shared-schema multi-tenancy using workspace subdomains.
 - Email-based authentication with JWT login, refresh, and profile endpoints.
-- Workspace onboarding, role-based memberships, invites, and workspace switching.
+- Workspace onboarding, role-based memberships, invites, invite acceptance, and workspace switching.
 - Warehouse and location management with active or inactive lifecycle controls.
 - Product categories, units, products, SKU rules, and low-stock thresholds.
 - Transaction-safe stock in, stock out, adjustment, and transfer workflows.
 - Append-only stock movement history and audit logs.
 - Tenant-scoped dashboard summaries, low-stock alerts, and recent activity.
-- Responsive Next.js frontend with HttpOnly cookies and a BFF proxy layer.
+- Responsive Next.js frontend with HttpOnly cookies, a BFF proxy layer, role-aware UI, and invite-driven team onboarding.
 - Swagger, OpenAPI schema, ReDoc, pytest coverage, and Dockerized local development.
 
 ## Architecture
@@ -76,12 +76,23 @@ More implementation detail lives in [docs/architecture-summary.md](docs/architec
 - `dashboard`: tenant-scoped reporting APIs
 - `frontend`: responsive Next.js dashboard and BFF API layer
 
+## Frontend Features
+
+- Authentication, registration, and workspace onboarding flows
+- Workspace switcher with tenant-subdomain routing
+- Role-aware UI for Owner, Admin, Manager, Staff, and Viewer access levels
+- Dashboard with tenant-scoped summary, low-stock, warehouse, and movement views
+- Products, categories, units, warehouses, and locations management
+- Stock levels, stock in, stock out, adjustment, and transfer workflows
+- Team members, invite creation, invite acceptance, and audit log views
+- Responsive admin shell for desktop, tablet, and mobile layouts
+
 ## Quick Start
 
 ### 1. Clone and enter the project
 
 ```powershell
-git clone <your-repo-url>
+git clone https://github.com/bilalzulfiqar-pk/multi-tenant-warehouse-management-saas.git
 cd multi-tenant-warehouse-management-saas
 ```
 
@@ -186,13 +197,13 @@ Copy from `.env.example`. Docker Compose already provides local defaults, but th
 
 - Use `lvh.me` for frontend testing so cookies can be shared across workspace subdomains.
 - Root and auth APIs are easiest to test from `localhost:8000`.
-- Tenant APIs should be tested from a tenant host such as `pakmart.localhost:8000`.
+- Tenant APIs should be tested from a tenant host. For consistency with the frontend local setup, prefer `lvh.me`-based hosts such as `pakmart.lvh.me:8000`.
 
 Examples:
 
 ```text
 http://localhost:8000/api/docs/
-http://pakmart.localhost:8000/api/products/
+http://pakmart.lvh.me:8000/api/products/
 http://lvh.me:3000/login
 http://pakmart.lvh.me:3000/dashboard
 ```
