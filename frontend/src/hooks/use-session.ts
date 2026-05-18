@@ -8,16 +8,17 @@ import { apiRequest, jsonBody } from "@/lib/api-client";
 import { buildTenantUrl } from "@/lib/tenant-host";
 import type { Session, Workspace } from "@/lib/types";
 
-export function useSession() {
+export function useSession(initialData?: Session) {
   return useQuery({
     queryKey: ["session"],
     queryFn: () => apiRequest<Session>("/api/session"),
+    initialData,
   });
 }
 
-export function useRequireSession() {
+export function useRequireSession(initialData?: Session) {
   const router = useRouter();
-  const query = useSession();
+  const query = useSession(initialData);
 
   useEffect(() => {
     if (!query.isLoading && query.data && !query.data.user) {

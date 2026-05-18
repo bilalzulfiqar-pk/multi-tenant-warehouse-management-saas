@@ -1,8 +1,12 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { RegisterPageContent } from "@/components/auth/register-page-content";
-import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/server/cookies";
+import {
+  authenticatedEntryUrl,
+  getServerSession,
+  requestUrlFromHost,
+} from "@/lib/server/session";
 import { safeNextPath } from "@/lib/tenant-host";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -18,13 +22,15 @@ export default async function RegisterPage({
 }) {
   const params = await searchParams;
   const next = safeNextPath(firstValue(params.next));
-  const cookieStore = await cookies();
-  const hasSessionCookie =
-    Boolean(cookieStore.get(ACCESS_COOKIE)?.value) ||
-    Boolean(cookieStore.get(REFRESH_COOKIE)?.value);
+  const headerStore = await headers();
+  const currentUrl = requestUrlFromHost(
+    headerStore.get("host"),
+    headerStore.get("x-forwarded-proto"),
+  );
+  const session = await getServerSession(headerStore.get("host"));
 
-  if (hasSessionCookie) {
-    redirect(next || "/");
+  if (session.user) {
+    redirect(next || authenticatedEntryUrl(session, currentUrl));
   }
 
   return <RegisterPageContent next={next} />;

@@ -1,9 +1,15 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { ACCESS_COOKIE } from "@/lib/server/cookies";
+import { authenticatedEntryUrl, getServerSession, requestUrlFromHost } from "@/lib/server/session";
 
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  redirect(cookieStore.get(ACCESS_COOKIE) ? "/dashboard" : "/login");
+  const headerStore = await headers();
+  const currentUrl = requestUrlFromHost(
+    headerStore.get("host"),
+    headerStore.get("x-forwarded-proto"),
+  );
+  const session = await getServerSession(headerStore.get("host"));
+
+  redirect(session.user ? authenticatedEntryUrl(session, currentUrl) : "/login");
 }

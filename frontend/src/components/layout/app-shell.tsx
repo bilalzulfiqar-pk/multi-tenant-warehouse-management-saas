@@ -42,6 +42,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AuthFlowLoadingScreen } from "@/components/auth/auth-flow-loading-screen";
 import { useRequireSession, useWorkspaceSwitcher } from "@/hooks/use-session";
 import { apiRequest } from "@/lib/api-client";
 import { canManageMembers, canStockInOut, canViewAuditLogs, ROLE_LABELS, roleHelp } from "@/lib/permissions";
@@ -51,7 +52,7 @@ import {
   buildTenantUrl,
   getTenantSubdomainFromHost,
 } from "@/lib/tenant-host";
-import type { Workspace } from "@/lib/types";
+import type { Session, Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -69,10 +70,16 @@ const navItems = [
 const sidebarLabelTransition =
   "min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-150 ease-out";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  initialSession,
+}: {
+  children: React.ReactNode;
+  initialSession?: Session;
+}) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const sessionQuery = useRequireSession();
+  const sessionQuery = useRequireSession(initialSession);
   const switchWorkspace = useWorkspaceSwitcher();
   const session = sessionQuery.data;
   const role = session?.workspace?.role;
@@ -700,24 +707,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function WorkspaceLoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="motion-page w-full max-w-sm overflow-hidden rounded-lg border bg-white shadow-sm">
-        <div className="h-1 overflow-hidden bg-slate-100">
-          <div className="workspace-progress h-full w-2/3 bg-emerald-500" />
-        </div>
-        <div className="flex items-center gap-4 p-5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-700">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-slate-950">Loading workspace</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Preparing tenant context and permissions.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFlowLoadingScreen
+      title="Loading workspace"
+      message="Preparing tenant context and permissions..."
+    />
   );
 }
 

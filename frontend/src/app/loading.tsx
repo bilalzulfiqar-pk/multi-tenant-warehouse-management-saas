@@ -3,8 +3,8 @@ import { AuthFlowLoadingScreen } from "@/components/auth/auth-flow-loading-scree
 export default function Loading() {
   return (
     <AuthFlowLoadingScreen
-      title="Loading workspace"
-      message="Preparing tenant context and permissions..."
+      title="Preparing workspace"
+      message="Checking your session and opening the right workspace..."
     />
   );
 }
