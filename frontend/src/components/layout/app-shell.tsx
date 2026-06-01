@@ -206,7 +206,7 @@ export function AppShell({
   async function logout() {
     setMobileMenuOpen(false);
     try {
-      await apiRequest("/api/auth/logout", { method: "POST" });
+      await apiRequest("/api/session/logout", { method: "POST" });
     } finally {
       queryClient.clear();
       window.location.assign(buildBaseUrl(window.location.href, "/login"));

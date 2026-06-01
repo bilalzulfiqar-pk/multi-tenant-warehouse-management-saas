@@ -57,7 +57,7 @@ async function register(page: Page, email: string, fullName: string, next?: stri
 }
 
 async function logout(page: Page) {
-  await appRequest(page, "/api/auth/logout", { method: "POST" });
+  await appRequest(page, "/api/session/logout", { method: "POST" });
 }
 
 async function createWorkspaceFromForm(page: Page, name: string, subdomain: string) {

@@ -123,7 +123,7 @@ function AcceptInvitePageContent() {
         : "/accept-invite";
 
     try {
-      await apiRequest("/api/auth/logout", { method: "POST" });
+      await apiRequest("/api/session/logout", { method: "POST" });
     } finally {
       queryClient.clear();
       window.location.assign(`/login?next=${encodeURIComponent(next)}`);

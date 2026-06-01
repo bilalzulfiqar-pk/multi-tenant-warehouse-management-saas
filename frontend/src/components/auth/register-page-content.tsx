@@ -21,7 +21,7 @@ export function RegisterPageContent({ next }: { next: string | null }) {
     setLoading(true);
     const form = new FormData(event.currentTarget);
     try {
-      await apiRequest("/api/auth/register", {
+      await apiRequest("/api/session/register", {
         method: "POST",
         body: jsonBody({
           email: form.get("email"),

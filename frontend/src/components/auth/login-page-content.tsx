@@ -22,7 +22,7 @@ export function LoginPageContent({ next }: { next: string | null }) {
     setLoading(true);
     const form = new FormData(event.currentTarget);
     try {
-      await apiRequest("/api/auth/login", {
+      await apiRequest("/api/session/login", {
         method: "POST",
         body: jsonBody({
           email: form.get("email"),
